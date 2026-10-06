@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pojęcia relacyjnej bazy danych — ściąga</title>
+<style>
+  :root{
+    --tlo:#f4f6fb;
+    --karta:#ffffff;
+    --granat:#1e3a8a;
+    --niebieski:#2563eb;
+    --jasny:#dbeafe;
+    --zielony:#15803d;
+    --jasnyziel:#dcfce7;
+    --pomarancz:#c2410c;
+    --jasnypom:#ffedd5;
+    --fiolet:#6d28d9;
+    --jasnyfiol:#ede9fe;
+    --czerwony:#b91c1c;
+    --jasnyczer:#fee2e2;
+    --szary:#475569;
+    --linia:#cbd5e1;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:28px 18px 60px;
+    background:var(--tlo); color:#0f172a;
+    font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    font-size:17px; line-height:1.5;
+  }
+  .strona{max-width:1180px;margin:0 auto}
+
+  h1{
+    font-size:2.6rem; text-align:center; margin:0 0 6px;
+    color:var(--granat); letter-spacing:-.5px;
+  }
+  .podtytul{text-align:center;color:var(--szary);font-size:1.15rem;margin:0 0 34px}
+
+  h2{
+    font-size:1.9rem; color:var(--granat);
+    margin:46px 0 6px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  h2 .nr{
+    background:var(--granat); color:#fff; border-radius:12px;
+    width:46px; height:46px; display:inline-flex; align-items:center;
+    justify-content:center; font-size:1.4rem; flex:none;
+  }
+  h2 .lekcja{
+    font-size:.85rem;font-weight:700;color:var(--szary);background:#e2e8f0;
+    border-radius:999px;padding:3px 12px;letter-spacing:.3px;
+  }
+  h3{font-size:1.3rem;color:var(--granat);margin:26px 0 10px}
+  .wstep{color:var(--szary);margin:0 0 18px;font-size:1.05rem}
+  code{font-family:"SF Mono",Menlo,Consolas,monospace}
+
+  /* ---------- EXCEL vs BAZA ---------- */
+  .dwa{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:14px}
+  .dwa > div{flex:1 1 470px;min-width:0}
+  .okno{
+    background:var(--karta);border:2px solid var(--linia);border-radius:14px;overflow:hidden;
+    height:100%;
+  }
+  .okno .pasek{
+    padding:7px 14px;font-weight:700;font-size:.98rem;display:flex;gap:8px;align-items:center;
+  }
+  .okno.xls .pasek{background:#166534;color:#fff}
+  .okno.db .pasek{background:var(--granat);color:#fff}
+  .okno .srodek{padding:12px;overflow-x:auto}
+  table.excel{border-collapse:collapse;font-size:.92rem;width:100%;min-width:420px}
+  table.excel th,table.excel td{border:1px solid #d4d4d8;padding:4px 8px;text-align:left;white-space:nowrap}
+  table.excel thead th{background:#f4f4f5;color:#52525b;font-weight:600;text-align:center}
+  table.excel tbody th{background:#f4f4f5;color:#52525b;font-weight:600;width:28px;text-align:center}
+  table.excel tr.naglowek td{font-weight:700;background:#f0fdf4}
+  table.excel td.zle{background:var(--jasnyczer);color:var(--czerwony);font-weight:600}
+  .przypisy{margin:10px 0 0;padding-left:20px;font-size:.92rem;color:var(--szary)}
+  .przypisy li{margin:3px 0}
+  .przypisy b{color:var(--czerwony)}
+
+  table.bazowa{border-collapse:collapse;font-size:.84rem;width:100%;min-width:420px}
+  table.bazowa th,table.bazowa td{border:1px solid var(--linia);padding:4px 6px;text-align:left;white-space:nowrap}
+  table.bazowa thead th{background:var(--jasny);color:var(--granat)}
+  table.bazowa thead th small{display:block;font-weight:400;color:var(--szary);font-size:.7rem}
+  table.bazowa td.null{color:#94a3b8;font-style:italic}
+  .odrzucone{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+  .odrzucone div{
+    background:var(--jasnyczer);border-left:5px solid var(--czerwony);border-radius:0 8px 8px 0;
+    padding:5px 10px;font-size:.9rem;color:#7f1d1d;
+  }
+  .odrzucone code{background:#fecaca;padding:0 5px;border-radius:4px}
+
+  table.porownanie{border-collapse:collapse;width:100%;margin-top:14px;font-size:1rem;background:#fff}
+  table.porownanie th,table.porownanie td{border:2px solid var(--linia);padding:9px 14px;vertical-align:top}
+  table.porownanie thead th{background:var(--granat);color:#fff;font-size:1.05rem}
+  table.porownanie tbody th{background:#f1f5f9;color:var(--granat);text-align:left;width:200px}
+  table.porownanie code{background:var(--jasny);padding:1px 6px;border-radius:5px}
+
+  /* ---------- SŁOWNICZEK ---------- */
+  .slownik-wrap{overflow-x:auto;margin-top:14px}
+  table.slownik{border-collapse:collapse;width:100%;min-width:860px;background:#fff;font-size:1rem}
+  table.slownik th,table.slownik td{border:2px solid var(--linia);padding:8px 12px;vertical-align:top}
+  table.slownik thead th{color:#fff;font-size:1rem;text-align:left}
+  table.slownik thead th.t1{background:var(--fiolet)}
+  table.slownik thead th.t2{background:var(--pomarancz)}
+  table.slownik thead th.t3{background:var(--granat)}
+  table.slownik thead th.t4{background:#166534}
+  table.slownik thead th.t5{background:#334155}
+  table.slownik thead th small{display:block;font-weight:400;opacity:.85;font-size:.8rem}
+  table.slownik td:first-child{font-weight:700;color:var(--fiolet)}
+  table.slownik td:nth-child(2){color:var(--pomarancz);font-weight:600}
+  table.slownik td:nth-child(3){color:var(--granat);font-weight:600}
+  table.slownik td.puste{color:#cbd5e1}
+  table.slownik code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:.92rem}
+  table.slownik tr.przerwa td{background:#f8fafc;font-size:.85rem;color:var(--szary);font-weight:600;padding:4px 12px}
+
+  .zoom{
+    background:var(--karta);border:2px solid var(--linia);
+    border-radius:16px;padding:18px;margin-top:16px;overflow-x:auto;
+  }
+  table.dane{border-collapse:collapse;width:100%;font-size:1rem;min-width:680px}
+  table.dane th,table.dane td{border:1px solid var(--linia);padding:7px 11px;text-align:left}
+  table.dane thead th{background:var(--jasny);color:var(--granat);font-weight:700}
+  table.dane tbody tr:nth-child(even){background:#f8fafc}
+  table.dane .kol-pk{background:var(--jasnypom)}
+  table.dane .kol-fk{background:var(--jasnyfiol)}
+  table.dane .wiersz-hi td{background:var(--jasnyziel)!important;font-weight:600}
+  table.dane .kol-hi{box-shadow:inset 0 0 0 3px var(--niebieski)}
+  table.dane .null{color:#94a3b8;font-style:italic}
+  .metki{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .metka{
+    border-radius:10px;padding:6px 12px;font-size:.95rem;background:#f1f5f9;
+    border-left:6px solid var(--szary);
+  }
+  .metka b{color:var(--granat)}
+  .metka.m-wiersz{border-left-color:var(--zielony)}
+  .metka.m-kol{border-left-color:var(--niebieski)}
+  .metka.m-pk{border-left-color:var(--pomarancz)}
+  .metka.m-fk{border-left-color:var(--fiolet)}
+
+  /* ---------- KARTY ---------- */
+  .siatka{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px;margin-top:16px}
+  .siatka.trzy{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .karta{
+    background:var(--karta);border:2px solid var(--linia);border-radius:14px;
+    padding:14px 16px 16px;
+  }
+  .karta h4{
+    margin:0 0 6px;font-size:1.15rem;color:var(--granat);
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  }
+  .karta h4 code{
+    background:var(--jasny);color:var(--granat);padding:2px 8px;border-radius:6px;font-size:1rem;
+  }
+  .karta p{margin:0 0 8px}
+  .karta p.cel{font-size:.95rem;color:var(--szary)}
+  .karta ul{margin:4px 0 8px;padding-left:22px}
+  .karta li{margin:3px 0}
+  .karta.k-pk{border-color:var(--pomarancz)} .karta.k-pk h4{color:var(--pomarancz)}
+  .karta.k-fk{border-color:var(--fiolet)}    .karta.k-fk h4{color:var(--fiolet)}
+  .karta.k-ok{border-color:var(--zielony)}   .karta.k-ok h4{color:var(--zielony)}
+  .karta.k-ciek{border-style:dashed}
+
+  .typ-lista{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+  .typ{
+    display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:baseline;
+    border-bottom:1px dashed var(--linia);padding-bottom:5px;font-size:.95rem;
+  }
+  .typ:last-child{border-bottom:none}
+  .typ code{font-weight:700;color:var(--granat)}
+  .typ .gdzie{display:block;color:var(--szary);font-size:.85rem}
+
+  pre{
+    margin:0;background:#f1f5f9;border-left:4px solid var(--niebieski);
+    border-radius:0 8px 8px 0;padding:10px 12px;overflow-x:auto;
+    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:.92rem;line-height:1.55;
+  }
+  pre + pre{margin-top:8px}
+  .wynik{
+    margin-top:8px;font-size:.92rem;color:var(--zielony);
+    background:var(--jasnyziel);border-radius:8px;padding:6px 10px;
+  }
+  .wynik b{color:#14532d}
+  .wynik.zly{color:var(--czerwony);background:var(--jasnyczer)}
+  .wynik.zly b{color:#7f1d1d}
+
+  table.mini{border-collapse:collapse;font-size:.92rem;margin:6px 0;width:100%}
+  table.mini th,table.mini td{border:1px solid var(--linia);padding:4px 9px;text-align:left}
+  table.mini thead th{background:var(--jasny);color:var(--granat)}
+  table.mini .kol-pk{background:var(--jasnypom)}
+  table.mini .kol-fk{background:var(--jasnyfiol)}
+  table.mini tr.zle td{background:var(--jasnyczer);color:var(--czerwony)}
+  table.mini tr.ok td{background:#f0fdf4}
+
+  /* ---------- DOBÓR TYPU — ŚCIEŻKA ---------- */
+  .sciezka{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .krok-s{
+    display:grid;grid-template-columns:44px 1fr 260px;gap:12px;align-items:center;
+    background:#fff;border:2px solid var(--linia);border-radius:12px;padding:8px 12px;
+  }
+  .krok-s .nrk{
+    width:34px;height:34px;border-radius:50%;background:var(--granat);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;
+  }
+  .krok-s .pyt{font-weight:600}
+  .krok-s .pyt small{display:block;font-weight:400;color:var(--szary)}
+  .krok-s .odp{
+    background:var(--jasnyziel);color:#14532d;border-radius:8px;padding:5px 10px;
+    font-size:.92rem;font-weight:600;
+  }
+
+  /* ---------- MAPA BAZY ---------- */
+  .tabelki{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+  .tabelka{
+    flex:1 1 200px; min-width:190px;
+    border:2px solid var(--zielony); border-radius:12px;
+    background:var(--karta); overflow:hidden;
+  }
+  .tabelka .glowka{
+    background:var(--jasnyziel); color:#14532d; font-weight:700;
+    padding:7px 12px; font-size:1.02rem; border-bottom:2px solid var(--zielony);
+  }
+  .tabelka .glowka small{display:block;font-weight:400;color:var(--szary);font-size:.8rem}
+  .tabelka ul{margin:0;padding:8px 10px 10px 26px;font-size:.92rem}
+  .tabelka li{margin:2px 0}
+  .tabelka .pk{color:var(--pomarancz);font-weight:700}
+  .tabelka .fk{color:var(--fiolet);font-weight:700}
+  .tabelka .typ{display:inline;border:none;padding:0;color:var(--szary);font-size:.8rem}
+  .tabelka .dokad{display:block;color:var(--fiolet);font-size:.8rem;margin-left:4px}
+  .tabelka.lacz{border-color:var(--fiolet)}
+  .tabelka.lacz .glowka{background:var(--jasnyfiol);color:var(--fiolet);border-bottom-color:var(--fiolet)}
+  .legenda{
+    display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;
+    font-size:.95rem;color:var(--szary)
+  }
+
+  /* ---------- ZWIĄZKI ---------- */
+  .zwiazki{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px;margin-top:16px}
+  .zwiazek{background:#fff;border:3px solid var(--linia);border-radius:16px;padding:14px 16px 16px}
+  .zwiazek .znak{
+    display:inline-block;font-size:1.6rem;font-weight:800;border-radius:12px;
+    padding:2px 14px;margin-bottom:6px;
+  }
+  .z11{border-color:var(--niebieski)} .z11 .znak{background:var(--jasny);color:var(--granat)}
+  .z1n{border-color:var(--zielony)}   .z1n .znak{background:var(--jasnyziel);color:#14532d}
+  .znm{border-color:var(--fiolet)}    .znm .znak{background:var(--jasnyfiol);color:var(--fiolet)}
+  .zwiazek h4{margin:0 0 4px;font-size:1.15rem;color:var(--granat)}
+  .zwiazek p{margin:0 0 8px;font-size:.98rem}
+  .zwiazek svg{width:100%;height:auto;display:block;margin:6px 0 8px}
+  .zwiazek .gdzie-fk{
+    background:#f8fafc;border-radius:10px;padding:8px 12px;font-size:.93rem;
+    border-left:5px solid var(--fiolet);
+  }
+  .zwiazek .gdzie-fk b{color:var(--fiolet)}
+  .zwiazek .gdzie-fk code{background:var(--jasnyfiol);padding:1px 5px;border-radius:4px}
+
+  /* ---------- CECHY / BŁĘDY ---------- */
+  .cechy{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px}
+  .cecha{
+    background:#fff;border:2px solid var(--linia);border-radius:14px;padding:12px 14px;
+    display:flex;gap:12px;align-items:flex-start;
+  }
+  .cecha .ikona{font-size:1.8rem;line-height:1}
+  .cecha b{display:block;color:var(--granat);font-size:1.05rem}
+  .cecha span{font-size:.93rem;color:var(--szary)}
+
+  .pma-blad{
+    background:#fff0f0;border:1px solid #e05252;border-radius:6px;padding:8px 12px;
+    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:.86rem;color:#a40000;
+    margin-top:8px;word-break:break-word;
+  }
+  .pma-blad b{color:#7f1d1d}
+  .integralnosc pre{font-size:.84rem}
+
+  .uwaga{
+    margin-top:26px;background:#fff7ed;border:2px solid var(--pomarancz);
+    border-radius:14px;padding:14px 18px;
+  }
+  .uwaga h3{margin:0 0 8px;color:var(--pomarancz)}
+  .uwaga ul{margin:0;padding-left:22px}
+  .uwaga li{margin:6px 0}
+  .uwaga code{background:#ffedd5;padding:1px 6px;border-radius:5px}
+
+  .zasada{
+    margin-top:16px;background:var(--jasnyziel);border:2px solid var(--zielony);
+    border-radius:14px;padding:14px 18px;
+  }
+  .zasada h3{margin:0 0 6px;color:#14532d}
+  .zasada p{margin:0;font-size:1.05rem}
+
+  .nie-myl{
+    margin-top:16px;background:var(--jasnyfiol);border:2px solid var(--fiolet);
+    border-radius:14px;padding:14px 18px;
+  }
+  .nie-myl h3{margin:0 0 8px;color:var(--fiolet)}
+  .nie-myl .pary{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+  .nie-myl .para{background:#fff;border-radius:10px;padding:10px 12px;font-size:.96rem}
+  .nie-myl .para b{color:var(--fiolet)}
+
+  .stop{
+    margin-top:26px;text-align:center;background:#fee2e2;border:2px dashed #dc2626;
+    border-radius:14px;padding:12px 18px;color:#991b1b;font-size:1.05rem;
+  }
+  .stop b{font-size:1.15rem}
+
+  /* ---------- STEPPER ---------- */
+  .stepper{
+    background:var(--karta);border:3px solid var(--granat);border-radius:18px;
+    padding:16px 18px 20px;margin-top:16px;
+  }
+  .stepper:focus{outline:3px solid var(--niebieski);outline-offset:3px}
+  .st-gora{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch}
+  .st-kod{
+    flex:1 1 380px;background:#0f172a;border-radius:12px;padding:12px 10px;
+    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:.98rem;line-height:1.45;
+    min-height:120px;
+  }
+  .st-kod .lin{
+    display:block;padding:3px 10px;border-radius:7px;color:#64748b;
+    transition:background-color .3s,color .3s;white-space:pre-wrap;
+  }
+  .st-kod .lin.akt{background:#1d4ed8;color:#fff;font-weight:700}
+  .st-kod .lin.zrobione{color:#7dd3fc}
+  .st-kod .lin.kom{color:#fbbf24}
+  .st-panel{flex:1 1 320px;display:flex;flex-direction:column;gap:10px}
+  .st-liczniki{display:flex;gap:10px;flex-wrap:wrap}
+  .st-licznik{
+    background:var(--jasny);color:var(--granat);border-radius:10px;
+    padding:6px 12px;font-size:.95rem;font-weight:700;
+  }
+  .st-licznik span{font-size:1.2rem;display:inline-block;min-width:22px}
+  .st-licznik.zielony{background:var(--jasnyziel);color:#14532d}
+  .st-licznik.fiolet{background:var(--jasnyfiol);color:var(--fiolet)}
+  .st-tytul{font-size:1.25rem;font-weight:700;color:var(--granat)}
+  .st-tytul code{background:var(--jasny);padding:1px 8px;border-radius:6px;font-size:1.05rem}
+  .st-opis{margin:0;font-size:1rem;color:var(--szary)}
+  .st-opis b{color:#0f172a}
+  .st-nawigacja{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    margin:16px 0 10px;padding-top:12px;border-top:2px solid var(--linia);
+  }
+  .st-nawigacja button{
+    font:inherit;font-weight:700;cursor:pointer;border-radius:10px;
+    padding:9px 16px;border:2px solid var(--granat);
+    background:var(--granat);color:#fff;transition:filter .15s,opacity .15s;
+  }
+  .st-nawigacja button.jasny{background:#fff;color:var(--granat)}
+  .st-nawigacja button:hover:not(:disabled){filter:brightness(1.15)}
+  .st-nawigacja button:disabled{opacity:.35;cursor:not-allowed}
+  .st-kropki{display:flex;gap:7px;margin-left:auto;flex-wrap:wrap}
+  .st-kropki button{
+    width:30px;height:30px;padding:0;border-radius:50%;
+    border:2px solid var(--linia);background:#fff;color:var(--szary);
+    font-size:.85rem;font-weight:700;
+  }
+  .st-kropki button.akt{background:var(--niebieski);border-color:var(--niebieski);color:#fff}
+  .st-kropki button.przed{background:var(--jasny);border-color:var(--niebieski);color:var(--granat)}
+
+  .st-plansze{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+  .st-blok{flex:1 1 300px;min-width:260px;transition:opacity .3s,filter .3s}
+  .st-blok > .tytul{
+    font-weight:700;color:var(--granat);margin-bottom:6px;font-size:1.02rem;
+  }
+  .st-blok > .tytul small{color:var(--szary);font-weight:400}
+  .st-blok.przygaszony{opacity:.4;filter:saturate(.3)}
+  .st-blok[hidden]{display:none}
+  .st-tabela{overflow-x:auto;border-radius:10px;transition:box-shadow .3s}
+  table.st-dane{border-collapse:collapse;width:100%;font-size:.93rem}
+  table.st-dane th,table.st-dane td{
+    border:1px solid var(--linia);padding:4px 8px;text-align:left;white-space:nowrap;
+    transition:background-color .35s,color .35s;
+  }
+  table.st-dane thead th{background:var(--jasny);color:var(--granat);font-weight:700}
+  table.st-dane thead th.kol-pk{background:var(--jasnypom);color:var(--pomarancz)}
+  table.st-dane thead th.kol-fk{background:var(--jasnyfiol);color:var(--fiolet)}
+  table.st-dane tr.pasuje td{background:#eafbf0;color:#14532d}
+  table.st-dane tr.wynik td{background:var(--jasnyziel);font-weight:700;color:#14532d}
+  table.st-dane tr.ukryty{display:none}
+  table.st-dane td.cel{box-shadow:inset 0 0 0 3px var(--fiolet);background:var(--jasnyfiol)!important;color:var(--fiolet)!important;font-weight:800}
+  table.st-dane td.cel-pk{box-shadow:inset 0 0 0 3px var(--pomarancz);background:var(--jasnypom)!important;color:var(--pomarancz)!important;font-weight:800}
+  table.st-dane tr.swiezy td{animation:blysk .8s ease-out}
+  @keyframes blysk{0%{background:#fde68a}100%{background:#eafbf0}}
+  .st-tabela.gotowe{box-shadow:0 0 0 3px var(--zielony)}
+  .st-stopka{
+    margin-top:12px;background:var(--jasnyfiol);border-radius:10px;padding:8px 12px;
+    font-size:1rem;color:var(--fiolet);font-weight:600;
+  }
+  .st-stopka code{background:#fff;padding:1px 6px;border-radius:5px}
+
+  @media print{
+    body{background:#fff;padding:0;font-size:11pt}
+    .strona{max-width:none}
+    h1{font-size:22pt}
+    h2{font-size:15pt;margin-top:18pt;page-break-after:avoid}
+    h3{page-break-after:avoid}
+    h2 .lekcja{display:none}
+    .karta,.zoom,.uwaga,.zasada,.nie-myl,.zwiazek,.cecha,.okno,.tabelka,.krok-s,.stepper{
+      break-inside:avoid;page-break-inside:avoid;box-shadow:none;
+    }
+    .przelam{page-break-before:always}
+    .siatka,.zwiazki{grid-template-columns:1fr 1fr}
+    .st-nawigacja,.st-kropki{display:none}
+    .st-kod{background:#fff;border:1pt solid #000}
+    .st-kod .lin,.st-kod .lin.akt{color:#000;background:#fff}
+    .okno.xls .pasek,.okno.db .pasek{color:#000;background:#e5e7eb}
+  }
+</style>
+</head>
+<body>
+<div class="strona">
+
+  <h1>Jak zbudowana jest relacyjna baza danych?</h1>
+  <p class="podtytul">Encje, atrybuty, typy danych, klucze, związki i cechy bazy relacyjnej — na przykładzie bazy <code>szkola</code></p>
+
+  <!-- ================= CZĘŚĆ 1: EXCEL vs BAZA ================= -->
+  <h2><span class="nr">1</span> Od Excela do bazy danych <span class="lekcja">lekcja 1</span></h2>
+  <p class="wstep">Ta sama lista uczniów dwa razy. Po lewej arkusz, w którym można wpisać cokolwiek. Po prawej tabela w bazie, która <b>sama pilnuje porządku</b>.</p>
+
+  <div class="dwa">
+    <div>
+      <div class="okno xls">
+        <div class="pasek">📗 Excel — lista_uczniow.xlsx</div>
+        <div class="srodek">
+          <table class="excel">
+            <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr></thead>
+            <tbody>
+              <tr class="naglowek"><th>1</th><td>Uczeń</td><td>Klasa</td><td>Urodzony</td><td>Średnia</td></tr>
+              <tr><th>2</th><td>Anna Kowalska</td><td>4TL</td><td>12.04.2008</td><td>4,35</td></tr>
+              <tr><th>3</th><td>Bartosz Nowak</td><td class="zle">4 TI</td><td class="zle">2008-11-30</td><td class="zle">brak</td></tr>
+              <tr><th>4</th><td>Celina Wójcik</td><td class="zle">czwarta L</td><td class="zle">5 stycznia 2009</td><td>5,1</td></tr>
+              <tr><th>5</th><td class="zle">Kowalska Anna</td><td>4TL</td><td>12.04.2008</td><td>4,35</td></tr>
+            </tbody>
+          </table>
+          <ul class="przypisy">
+            <li><b>Klasa:</b> trzy różne zapisy tej samej rzeczy — filtr „4TL” nie znajdzie Celiny.</li>
+            <li><b>Data:</b> każdy wpisał po swojemu — nie da się posortować po wieku.</li>
+            <li><b>Średnia:</b> słowo „brak” w kolumnie z liczbami — średnia klasy się wysypie.</li>
+            <li><b>Wiersz 5:</b> ta sama Anna drugi raz — nikt tego nie zauważył.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="okno db">
+        <div class="pasek">🗄️ Baza <code>szkola</code> — tabela <code>uczniowie</code></div>
+        <div class="srodek">
+          <table class="bazowa">
+            <thead><tr>
+              <th>pesel<small>CHAR(11) UNIQUE</small></th>
+              <th>imie<small>VARCHAR(20)</small></th>
+              <th>nazwisko<small>VARCHAR(30)</small></th>
+              <th>id_klasy<small>INT → klasy</small></th>
+              <th>data_urodzenia<small>DATE</small></th>
+              <th>srednia<small>DECIMAL(3,2)</small></th>
+            </tr></thead>
+            <tbody>
+              <tr><td>08241210743</td><td>Anna</td><td>Kowalska</td><td>3</td><td>2008-04-12</td><td>4.35</td></tr>
+              <tr><td>08313011458</td><td>Bartosz</td><td>Nowak</td><td>1</td><td>2008-11-30</td><td class="null">NULL</td></tr>
+              <tr><td>09210512147</td><td>Celina</td><td>Wójcik</td><td>3</td><td>2009-01-05</td><td>5.10</td></tr>
+            </tbody>
+          </table>
+          <div class="odrzucone">
+            <div>❌ <code>'czwarta L'</code> — klasy wybiera się po numerze z tabeli <code>klasy</code>. Innej pisowni nie ma.</div>
+            <div>❌ <code>'5 stycznia 2009'</code> — typ <code>DATE</code> przyjmuje tylko <code>RRRR-MM-DD</code>.</div>
+            <div>❌ <code>'brak'</code> — w liczbie nie ma słów. Brak wartości to <code>NULL</code>.</div>
+            <div>❌ druga Anna — <code>pesel</code> jest <code>UNIQUE</code>, baza nie przyjmie duplikatu.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="porownanie">
+    <thead><tr><th></th><th>📗 Arkusz (Excel)</th><th>🗄️ Relacyjna baza danych</th></tr></thead>
+    <tbody>
+      <tr><th>Co wolno wpisać?</th><td>Cokolwiek, w dowolną komórkę.</td><td>Tylko wartość zgodną z <b>typem danych</b> kolumny.</td></tr>
+      <tr><th>Powtórzenia</th><td>Nikt ich nie pilnuje.</td><td><b>Klucz główny</b> gwarantuje, że wiersz się nie powtórzy.</td></tr>
+      <tr><th>Powiązane dane</th><td>Kopiujesz nazwę klasy do każdego ucznia.</td><td>Klasa jest zapisana <b>raz</b>, uczeń tylko na nią wskazuje (<b>klucz obcy</b>).</td></tr>
+      <tr><th>Wiele osób naraz</th><td>Plik się blokuje albo rozjeżdżają się kopie.</td><td>Setki użytkowników jednocześnie — pilnuje tego <b>SZBD</b>.</td></tr>
+      <tr><th>Wyszukiwanie</th><td>Filtr i Ctrl+F.</td><td>Zapytania <code>SELECT</code> — także po milionach wierszy.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="zasada">
+    <h3>💡 Jedno zdanie do zapamiętania</h3>
+    <p>Arkusz <b>przyjmie wszystko</b>. Baza danych <b>przyjmie tylko to, co pasuje do jej reguł</b> — typów, kluczy i powiązań.</p>
+  </div>
+
+  <!-- ================= CZĘŚĆ 2: SŁOWNICZEK ================= -->
+  <h2 class="przelam"><span class="nr">2</span> Jedna rzecz, kilka nazw — słowniczek <span class="lekcja">lekcja 1</span></h2>
+  <p class="wstep">
+    Na egzaminie padają słowa z <b>teorii</b> i z <b>projektu</b>, a w phpMyAdmin widzisz słowa z <b>praktyki</b>.
+    Wszystkie trzy opisują to samo. Czytaj tabelkę <b>wierszami</b>.
+  </p>
+
+  <div class="slownik-wrap">
+    <table class="slownik">
+      <thead><tr>
+        <th class="t1">Teoria<small>model relacyjny — egzamin</small></th>
+        <th class="t2">Projekt<small>diagram E/R</small></th>
+        <th class="t3">Praktyka<small>phpMyAdmin / SQL</small></th>
+        <th class="t4">Excel<small>dla porównania</small></th>
+        <th class="t5">Przykład z bazy <code style="background:none;color:#fff">szkola</code><small>&nbsp;</small></th>
+      </tr></thead>
+      <tbody>
+        <tr><td>relacja</td><td>encja <span style="font-weight:400">(np. Uczeń)</span></td><td>tabela</td><td>arkusz</td><td><code>uczniowie</code></td></tr>
+        <tr><td>krotka</td><td>wystąpienie encji</td><td>wiersz, rekord</td><td>wiersz</td><td>Anna Kowalska z całym kompletem danych</td></tr>
+        <tr><td>atrybut</td><td>atrybut encji</td><td>kolumna</td><td>kolumna</td><td><code>nazwisko</code></td></tr>
+        <tr><td>wartość atrybutu</td><td class="puste">—</td><td>pole, komórka</td><td>komórka</td><td><code>'Kowalska'</code></td></tr>
+        <tr><td>dziedzina atrybutu</td><td>typ atrybutu</td><td>typ danych</td><td>format komórki <span style="font-weight:400">(tylko podpowiedź)</span></td><td><code>VARCHAR(30)</code> — tekst do 30 znaków</td></tr>
+        <tr><td>klucz relacji</td><td>identyfikator encji</td><td>klucz główny <code>PRIMARY KEY</code></td><td class="puste">—</td><td><code>id</code></td></tr>
+        <tr><td>związek</td><td>związek encji <span style="font-weight:400">(linia na diagramie)</span></td><td>klucz obcy <code>FOREIGN KEY</code></td><td class="puste">—</td><td><code>uczniowie.id_klasy</code> → <code>klasy.id</code></td></tr>
+        <tr class="przerwa"><td colspan="5">Dwie liczby opisujące tabelę:</td></tr>
+        <tr><td>stopień relacji</td><td class="puste">—</td><td>liczba kolumn</td><td>liczba kolumn</td><td><code>uczniowie</code> ma 8 kolumn → stopień 8</td></tr>
+        <tr><td>moc (liczność) relacji</td><td class="puste">—</td><td>liczba wierszy</td><td>liczba wierszy</td><td><code>uczniowie</code> ma 39 wierszy → moc 39</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>🔍 Słowniczek na żywej tabeli <code>uczniowie</code></h3>
+  <div class="zoom">
+    <table class="dane">
+      <thead>
+        <tr>
+          <th class="kol-pk">🔑 id</th><th>pesel</th><th>imie</th><th class="kol-hi">nazwisko</th>
+          <th class="kol-fk">🔗 id_klasy</th><th>data_urodzenia</th><th>email</th><th>srednia</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="kol-pk">1</td><td>08241210743</td><td>Anna</td><td class="kol-hi">Kowalska</td><td class="kol-fk">3</td><td>2008-04-12</td><td>a.kowalska@zsp.pl</td><td>4.35</td></tr>
+        <tr class="wiersz-hi"><td class="kol-pk">2</td><td>08313011458</td><td>Bartosz</td><td class="kol-hi">Nowak</td><td class="kol-fk">1</td><td>2008-11-30</td><td class="null">NULL</td><td>3.80</td></tr>
+        <tr><td class="kol-pk">3</td><td>09210512147</td><td>Celina</td><td class="kol-hi">Wójcik</td><td class="kol-fk">3</td><td>2009-01-05</td><td>c.wojcik@zsp.pl</td><td>5.10</td></tr>
+        <tr><td class="kol-pk">4</td><td>07272212870</td><td>Damian</td><td class="kol-hi">Zieliński</td><td class="kol-fk">2</td><td>2007-07-22</td><td>d.zielinski@zsp.pl</td><td>2.95</td></tr>
+      </tbody>
+    </table>
+    <div class="metki">
+      <div class="metka"><b>Cała tabela</b> = relacja = encja „Uczeń”</div>
+      <div class="metka m-wiersz"><b>Zielony pasek</b> = krotka = wiersz = jeden uczeń (Bartosz)</div>
+      <div class="metka m-kol"><b>Niebieska ramka</b> = atrybut = kolumna <code>nazwisko</code></div>
+      <div class="metka m-pk"><b>🔑 id</b> = klucz główny</div>
+      <div class="metka m-fk"><b>🔗 id_klasy</b> = klucz obcy (wskazuje klasę)</div>
+    </div>
+  </div>
+
+  <div class="nie-myl">
+    <h3>🤔 Nie myl!</h3>
+    <div class="pary">
+      <div class="para"><b>„Relacja” w teorii</b> = <b>tabela</b>.<br>
+        <b>„Relacja” potocznie</b> (także w phpMyAdmin: <i>Widok relacyjny</i>) = <b>powiązanie</b> między tabelami.
+        Na egzaminie „relacja” to prawie zawsze <b>tabela</b>, a powiązanie to <b>związek</b>.</div>
+      <div class="para"><b>Moc relacji</b> = ile tabela ma <b>wierszy</b> (39).<br>
+        <b>Krotność związku</b> = <b>1:1, 1:N, N:M</b> — ile wierszy jednej tabeli łączy się z wierszami drugiej (część 5).
+        To dwie różne rzeczy, choć po angielsku obie bywają nazywane <i>cardinality</i>.</div>
+      <div class="para"><b>Encja</b> = „rzecz” z prawdziwego świata, o której zbieramy dane: uczeń, klasa, przedmiot.
+        Każda encja dostaje w bazie <b>własną tabelę</b>.<br>
+        <b>Atrybut</b> = cecha tej rzeczy: imię, data urodzenia.</div>
+    </div>
+  </div>
+
+  <!-- ================= CZĘŚĆ 3: TYPY DANYCH ================= -->
+  <h2 class="przelam"><span class="nr">3</span> Typy danych — co wolno wpisać do kolumny <span class="lekcja">lekcja 1</span></h2>
+  <p class="wstep">
+    Każda kolumna ma <b>jeden typ</b>, ustalony raz na zawsze przy tworzeniu tabeli.
+    W teorii zbiór dozwolonych wartości to <b>dziedzina atrybutu</b>. Zobaczysz ją w phpMyAdmin w zakładce <b>Struktura</b>.
+  </p>
+
+  <div class="siatka">
+    <div class="karta">
+      <h4>🔢 Liczby całkowite</h4>
+      <div class="typ-lista">
+        <div class="typ"><code>TINYINT</code><span>od −128 do 127 <span class="gdzie">waga oceny, godziny w tygodniu</span></span></div>
+        <div class="typ"><code>SMALLINT</code><span>do ±32 tysięcy <span class="gdzie">numer sali, rok</span></span></div>
+        <div class="typ"><code>INT</code><span>do ±2,1 miliarda <span class="gdzie">id, liczba mieszkańców</span></span></div>
+        <div class="typ"><code>BIGINT</code><span>gigantyczne liczby <span class="gdzie">liczniki wyświetleń, bajty</span></span></div>
+      </div>
+      <div class="wynik"><b>UNSIGNED</b> = bez minusa, za to 2× większy zakres w górę (np. <code>TINYINT UNSIGNED</code>: 0–255).</div>
+    </div>
+
+    <div class="karta">
+      <h4>💰 Liczby z przecinkiem</h4>
+      <div class="typ-lista">
+        <div class="typ"><code>DECIMAL(5,2)</code><span><b>dokładne</b>: 5 cyfr razem, w tym 2 po przecinku → max <b>999.99</b> <span class="gdzie">ceny, oceny, średnie</span></span></div>
+        <div class="typ"><span><code>FLOAT</code><br><code>DOUBLE</code></span><span><b>przybliżone</b> — mogą zgubić końcówkę <span class="gdzie">pomiary, obliczenia naukowe</span></span></div>
+      </div>
+      <div class="wynik"><b>Pieniądze i oceny → zawsze DECIMAL.</b> W SQL piszemy kropkę: <code>4.35</code>, nie <code>4,35</code>.</div>
+    </div>
+
+    <div class="karta">
+      <h4>🔤 Tekst</h4>
+      <div class="typ-lista">
+        <div class="typ"><code>CHAR(n)</code><span><b>stała</b> długość n znaków <span class="gdzie">PESEL <code>CHAR(11)</code>, klasa <code>CHAR(4)</code></span></span></div>
+        <div class="typ"><code>VARCHAR(n)</code><span><b>zmienna</b> długość, maksymalnie n znaków <span class="gdzie">imię, nazwisko, e-mail</span></span></div>
+        <div class="typ"><code>TEXT</code><span>długi tekst <span class="gdzie">opis, treść wiadomości</span></span></div>
+      </div>
+    </div>
+
+    <div class="karta">
+      <h4>📅 Data i czas</h4>
+      <div class="typ-lista">
+        <div class="typ"><code>DATE</code><span><code>'2008-04-12'</code> — zawsze RRRR-MM-DD <span class="gdzie">data urodzenia, data oceny</span></span></div>
+        <div class="typ"><code>TIME</code><span><code>'08:00:00'</code> <span class="gdzie">godzina lekcji</span></span></div>
+        <div class="typ"><code>DATETIME</code><span><code>'2026-10-05 08:00:00'</code> <span class="gdzie">moment logowania</span></span></div>
+        <div class="typ"><code>YEAR</code><span><code>2026</code> <span class="gdzie">rok wydania gry</span></span></div>
+      </div>
+    </div>
+
+    <div class="karta">
+      <h4>📋 Wybór z listy i tak/nie</h4>
+      <div class="typ-lista">
+        <div class="typ"><code>ENUM('a','b')</code><span>tylko wartość z listy <span class="gdzie"><code>profil</code> klasy, <code>dzien</code> koła</span></span></div>
+        <div class="typ"><code>BOOLEAN</code><span>w MySQL to <code>TINYINT(1)</code>: 0 = nie, 1 = tak <span class="gdzie">czy_aktywny</span></span></div>
+      </div>
+      <div class="wynik"><b>W bazie szkola</b> „tak/nie” zapisano jako <code>CHAR(1)</code> z wartościami <code>'T'</code>/<code>'N'</code> — też spotkasz taki zapis.</div>
+    </div>
+
+    <div class="karta">
+      <h4>🕳️ <code>NULL</code>, <code>NOT NULL</code>, <code>DEFAULT</code></h4>
+      <ul>
+        <li><code>NULL</code> — wartości <b>nie ma</b> (to nie zero i nie pusty tekst). Bartosz nie podał maila.</li>
+        <li><code>NOT NULL</code> — pole <b>musi</b> być wypełnione. Uczeń bez nazwiska? Nie przejdzie.</li>
+        <li><code>DEFAULT 'N'</code> — wartość wpisana sama, gdy nic nie podasz.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>🧭 Jak dobrać typ? Zadaj pytania po kolei</h3>
+  <div class="sciezka">
+    <div class="krok-s"><span class="nrk">1</span><span class="pyt">Czy to data albo godzina?</span><span class="odp">tak → DATE / TIME / DATETIME</span></div>
+    <div class="krok-s"><span class="nrk">2</span><span class="pyt">Czy wartości to krótka, znana z góry lista?<small>kontynent, rozmiar koszulki, dzień tygodnia</small></span><span class="odp">tak → ENUM(...)</span></div>
+    <div class="krok-s"><span class="nrk">3</span><span class="pyt">Czy będę na tym <b>liczyć</b> (dodawać, średnia, porównywać wielkość)?<small>PESEL, telefon, kod pocztowy — to cyfry, ale nikt ich nie dodaje!</small></span><span class="odp">nie → tekst (krok 5)</span></div>
+    <div class="krok-s"><span class="nrk">4</span><span class="pyt">Liczba: czy ma część po przecinku?</span><span class="odp">tak → DECIMAL(p,s)<br>nie → TINYINT / SMALLINT / INT</span></div>
+    <div class="krok-s"><span class="nrk">5</span><span class="pyt">Tekst: czy zawsze ma tę samą długość?</span><span class="odp">tak → CHAR(n)<br>nie → VARCHAR(n)</span></div>
+    <div class="krok-s"><span class="nrk">6</span><span class="pyt">Czy wartość może być nieznana?</span><span class="odp">tak → NULL · nie → NOT NULL</span></div>
+  </div>
+
+  <div class="uwaga">
+    <h3>⚠️ Klasyczne pułapki z typami</h3>
+    <ul>
+      <li><b>PESEL jako <code>INT</code></b> — 11 cyfr nie mieści się w INT (max 2 147 483 647), a PESEL osoby urodzonej w 2001 (<code>01…</code>) straci zero z przodu. → <code>CHAR(11)</code>.</li>
+      <li><b>Telefon jako <code>INT</code></b> — gdzie wpiszesz <code>+48</code>? → <code>VARCHAR(15)</code>.</li>
+      <li><b>Kod pocztowy jako liczba</b> — <code>05-200</code> zamieni się w <code>-195</code> (5 minus 200). → <code>CHAR(6)</code>.</li>
+      <li><b>Data jako <code>VARCHAR</code></b> — <code>'12.04.2008'</code> posortuje się alfabetycznie, czyli źle. → <code>DATE</code>.</li>
+      <li><b>Cena jako <code>FLOAT</code></b> — grosze mogą „uciec” przy liczeniu. → <code>DECIMAL(8,2)</code>.</li>
+      <li><b><code>VARCHAR(255)</code> wszędzie</b> — działa, ale baza przestaje pilnować sensownej długości. Dobieraj n z głową.</li>
+    </ul>
+  </div>
+
+  <!-- ================= CZĘŚĆ 4: KLUCZE ================= -->
+  <h2 class="przelam"><span class="nr">4</span> Klucze — jak baza odróżnia i łączy wiersze <span class="lekcja">lekcja 2</span></h2>
+  <p class="wstep">Mapa całej bazy <code>szkola</code>. Pomarańczowy 🔑 to klucz główny, fioletowy 🔗 to klucz obcy (strzałka pokazuje, dokąd wskazuje).</p>
+
+  <div class="tabelki">
+    <div class="tabelka">
+      <div class="glowka">📋 klasy<small>5 wierszy</small></div>
+      <ul>
+        <li><span class="pk">🔑 id</span> <span class="typ">INT</span></li>
+        <li>nazwa <span class="typ">CHAR(4) UNIQUE</span></li>
+        <li>profil <span class="typ">ENUM</span></li>
+        <li>sala <span class="typ">SMALLINT</span></li>
+        <li><span class="fk">🔗 id_wychowawcy</span> <span class="typ">INT UNIQUE</span><span class="dokad">→ nauczyciele.id</span></li>
+      </ul>
+    </div>
+    <div class="tabelka">
+      <div class="glowka">📋 uczniowie<small>39 wierszy</small></div>
+      <ul>
+        <li><span class="pk">🔑 id</span> <span class="typ">INT</span></li>
+        <li>pesel <span class="typ">CHAR(11) UNIQUE</span></li>
+        <li>imie, nazwisko <span class="typ">VARCHAR</span></li>
+        <li><span class="fk">🔗 id_klasy</span> <span class="typ">INT</span><span class="dokad">→ klasy.id</span></li>
+        <li>data_urodzenia <span class="typ">DATE</span></li>
+        <li>email <span class="typ">VARCHAR(50) NULL</span></li>
+        <li>srednia <span class="typ">DECIMAL(3,2)</span></li>
+      </ul>
+    </div>
+    <div class="tabelka">
+      <div class="glowka">📋 nauczyciele<small>10 wierszy</small></div>
+      <ul>
+        <li><span class="pk">🔑 id</span> <span class="typ">INT</span></li>
+        <li>imie, nazwisko <span class="typ">VARCHAR</span></li>
+        <li>email <span class="typ">VARCHAR(50) UNIQUE</span></li>
+      </ul>
+    </div>
+    <div class="tabelka">
+      <div class="glowka">📋 przedmioty<small>10 wierszy</small></div>
+      <ul>
+        <li><span class="pk">🔑 id</span> <span class="typ">INT</span></li>
+        <li>nazwa <span class="typ">VARCHAR(40)</span></li>
+        <li>godziny_tyg <span class="typ">TINYINT</span></li>
+        <li>rozszerzony <span class="typ">CHAR(1)</span></li>
+      </ul>
+    </div>
+    <div class="tabelka">
+      <div class="glowka">📋 oceny<small>456 wierszy</small></div>
+      <ul>
+        <li><span class="pk">🔑 id</span> <span class="typ">INT</span></li>
+        <li><span class="fk">🔗 id_ucznia</span><span class="dokad">→ uczniowie.id</span></li>
+        <li><span class="fk">🔗 id_przedmiotu</span><span class="dokad">→ przedmioty.id</span></li>
+        <li>ocena <span class="typ">DECIMAL(2,1)</span></li>
+        <li>waga <span class="typ">TINYINT</span></li>
+        <li>data_wystawienia <span class="typ">DATE</span></li>
+      </ul>
+    </div>
+    <div class="tabelka">
+      <div class="glowka">📋 kola<small>6 wierszy — koła zainteresowań</small></div>
+      <ul>
+        <li><span class="pk">🔑 id</span> <span class="typ">INT</span></li>
+        <li>nazwa <span class="typ">VARCHAR(40)</span></li>
+        <li>dzien <span class="typ">ENUM</span></li>
+        <li><span class="fk">🔗 id_opiekuna</span><span class="dokad">→ nauczyciele.id</span></li>
+      </ul>
+    </div>
+    <div class="tabelka lacz">
+      <div class="glowka">🔀 uczniowie_kola<small>tabela łącząca, 52 wiersze</small></div>
+      <ul>
+        <li><span class="pk">🔑</span><span class="fk">🔗 id_ucznia</span><span class="dokad">→ uczniowie.id</span></li>
+        <li><span class="pk">🔑</span><span class="fk">🔗 id_kola</span><span class="dokad">→ kola.id</span></li>
+        <li>data_zapisu <span class="typ">DATE</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="legenda">
+    <span><b style="color:#c2410c">🔑 klucz główny (PK)</b> — jednoznacznie wskazuje wiersz</span>
+    <span><b style="color:#6d28d9">🔗 klucz obcy (FK)</b> — wskazuje wiersz w innej tabeli</span>
+    <span><b>🔑🔗 razem</b> — kolumna jest częścią klucza głównego <i>i</i> kluczem obcym</span>
+  </div>
+
+  <div class="siatka">
+    <div class="karta k-pk">
+      <h4>🔑 Klucz główny <code>PRIMARY KEY</code></h4>
+      <p>Kolumna (lub kilka), która <b>jednoznacznie wskazuje jeden wiersz</b>. Każda tabela ma dokładnie jeden klucz główny.</p>
+      <ul>
+        <li>✅ <b>unikalny</b> — nigdy się nie powtarza,</li>
+        <li>✅ <b>nigdy pusty</b> — nie może być <code>NULL</code>,</li>
+        <li>✅ <b>stały</b> — nie zmienia się z czasem.</li>
+      </ul>
+      <div class="wynik"><b>phpMyAdmin:</b> zakładka Struktura → złoty kluczyk przy nazwie kolumny.</div>
+    </div>
+
+    <div class="karta k-pk">
+      <h4>🔑 Naturalny czy sztuczny?</h4>
+      <table class="mini">
+        <thead><tr><th></th><th>naturalny: <code>pesel</code></th><th>sztuczny: <code>id</code></th></tr></thead>
+        <tbody>
+          <tr><td>skąd się bierze</td><td>z prawdziwego świata</td><td>nadaje go baza (<code>AUTO_INCREMENT</code>)</td></tr>
+          <tr><td>znaczenie</td><td>coś mówi (data urodzenia)</td><td>nic nie znaczy — to tylko numer</td></tr>
+          <tr><td>czy każdy go ma?</td><td>uczeń z zagranicy — nie!</td><td>zawsze</td></tr>
+          <tr><td>czy może się zmienić?</td><td>bywa poprawiany</td><td>nigdy</td></tr>
+        </tbody>
+      </table>
+      <div class="wynik"><b>Praktyka:</b> PK sztuczny (<code>id</code>) + naturalny jako <code>UNIQUE</code> — tak jak w tabeli <code>uczniowie</code>.</div>
+    </div>
+
+    <div class="karta k-pk">
+      <h4>🔑🔑 Klucz złożony</h4>
+      <p>Klucz główny z <b>kilku kolumn naraz</b>. Pojedyncze wartości mogą się powtarzać — <b>para</b> już nie.</p>
+      <table class="mini">
+        <thead><tr><th class="kol-pk">id_ucznia</th><th class="kol-pk">id_kola</th><th></th></tr></thead>
+        <tbody>
+          <tr class="ok"><td>3</td><td>2</td><td>✅ Celina na robotyce</td></tr>
+          <tr class="ok"><td>3</td><td>3</td><td>✅ Celina na fotograficznym</td></tr>
+          <tr class="ok"><td>5</td><td>3</td><td>✅ Ewa na fotograficznym</td></tr>
+          <tr class="zle"><td>3</td><td>2</td><td>❌ Celina drugi raz na robotyce</td></tr>
+        </tbody>
+      </table>
+      <div class="pma-blad"><b>#1062</b> - Duplicate entry '3-2' for key 'PRIMARY'</div>
+    </div>
+
+    <div class="karta k-fk">
+      <h4>🔗 Klucz obcy <code>FOREIGN KEY</code></h4>
+      <p>Kolumna, która <b>wskazuje klucz główny w innej tabeli</b>. To z niej bierze się związek.</p>
+      <ul>
+        <li><code>uczniowie.id_klasy = 3</code> → „jestem w klasie, która w tabeli <code>klasy</code> ma <code>id = 3</code>”.</li>
+        <li>Wartości <b>mogą się powtarzać</b> — 8 uczniów ma <code>id_klasy = 3</code>.</li>
+        <li>Musi wskazywać <b>istniejący</b> wiersz — klasy nr 99 nie ma, więc baza odrzuci taki zapis.</li>
+        <li>Ma <b>ten sam typ</b> co klucz, na który wskazuje (<code>INT</code> → <code>INT</code>).</li>
+      </ul>
+      <div class="wynik"><b>phpMyAdmin:</b> Struktura → <i>Widok relacyjny</i> (ang. <i>Relation view</i>) pokazuje, dokąd wskazuje każdy klucz obcy.</div>
+    </div>
+
+    <div class="karta k-ciek">
+      <h4>🧐 Ciekawostka: klucz kandydujący</h4>
+      <p>Każda kolumna, która <b>mogłaby</b> zostać kluczem głównym, bo jest unikalna i zawsze wypełniona. Z kandydatów wybieramy jeden — resztę oznaczamy <code>UNIQUE</code>.</p>
+      <ul>
+        <li><code>klasy</code>: <code>id</code> albo <code>nazwa</code> (4TI jest tylko jedna),</li>
+        <li><code>uczniowie</code>: <code>id</code> albo <code>pesel</code>,</li>
+        <li><code>nauczyciele</code>: <code>id</code> albo <code>email</code>.</li>
+      </ul>
+    </div>
+
+    <div class="karta">
+      <h4>❓ Dlaczego nie <code>nazwisko</code>?</h4>
+      <p>Bo się powtarza (dwóch Nowaków w szkole to norma) i może się zmienić (ślub). Imię tym bardziej — w bazie <code>szkola</code> są aż trzy Amelie.</p>
+<pre>SELECT imie, COUNT(*) AS Ile
+FROM uczniowie
+GROUP BY imie
+HAVING Ile &gt; 1;</pre>
+      <div class="wynik"><b>Wniosek:</b> kluczem nie może być nic, co się powtarza albo zmienia.</div>
+    </div>
+  </div>
+
+  <!-- ================= CZĘŚĆ 5: ZWIĄZKI ================= -->
+  <h2 class="przelam"><span class="nr">5</span> Związki między tabelami: 1:1, 1:N, N:M <span class="lekcja">lekcja 2</span></h2>
+  <p class="wstep">Pytanie zawsze brzmi: <b>z iloma</b> wierszami drugiej tabeli może być połączony <b>jeden</b> wiersz pierwszej? Zadaj je <b>w obie strony</b>.</p>
+
+  <div class="zwiazki">
+
+    <div class="zwiazek z11">
+      <span class="znak">1 : 1</span>
+      <h4>Klasa — wychowawca</h4>
+      <p>Klasa ma <b>jednego</b> wychowawcę. Nauczyciel jest wychowawcą <b>najwyżej jednej</b> klasy.</p>
+      <svg viewBox="0 0 360 180" role="img" aria-label="Trzy klasy połączone każda z jednym wychowawcą">
+        <g stroke="#2563eb" stroke-width="3">
+          <line x1="128" y1="30" x2="232" y2="30"/><line x1="128" y1="90" x2="232" y2="90"/><line x1="128" y1="150" x2="232" y2="150"/>
+        </g>
+        <g font-family="Segoe UI,Arial" font-size="15" font-weight="700" text-anchor="middle">
+          <rect x="18" y="12" width="110" height="36" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/><text x="73" y="36" fill="#1e3a8a">4TI</text>
+          <rect x="18" y="72" width="110" height="36" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/><text x="73" y="96" fill="#1e3a8a">5TM</text>
+          <rect x="18" y="132" width="110" height="36" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/><text x="73" y="156" fill="#1e3a8a">4TL</text>
+          <rect x="232" y="12" width="120" height="36" rx="10" fill="#fff" stroke="#2563eb" stroke-width="2"/><text x="292" y="36" fill="#0f172a">T. Kaczmarek</text>
+          <rect x="232" y="72" width="120" height="36" rx="10" fill="#fff" stroke="#2563eb" stroke-width="2"/><text x="292" y="96" fill="#0f172a">R. Górski</text>
+          <rect x="232" y="132" width="120" height="36" rx="10" fill="#fff" stroke="#2563eb" stroke-width="2"/><text x="292" y="156" fill="#0f172a">J. Pawlak</text>
+        </g>
+      </svg>
+      <div class="gdzie-fk"><b>Klucz obcy:</b> po dowolnej stronie, ale z <code>UNIQUE</code>. U nas: <code>klasy.id_wychowawcy</code> UNIQUE — ten sam nauczyciel nie trafi do dwóch klas.</div>
+    </div>
+
+    <div class="zwiazek z1n">
+      <span class="znak">1 : N</span>
+      <h4>Klasa — uczniowie</h4>
+      <p>Klasa ma <b>wielu</b> uczniów. Uczeń chodzi do <b>jednej</b> klasy. Najczęstszy związek!</p>
+      <svg viewBox="0 0 360 200" role="img" aria-label="Klasa 4TL połączona z czterema uczniami">
+        <g stroke="#15803d" stroke-width="3">
+          <line x1="128" y1="100" x2="232" y2="25"/><line x1="128" y1="100" x2="232" y2="75"/>
+          <line x1="128" y1="100" x2="232" y2="125"/><line x1="128" y1="100" x2="232" y2="175"/>
+        </g>
+        <g font-family="Segoe UI,Arial" font-size="15" font-weight="700" text-anchor="middle">
+          <rect x="18" y="82" width="110" height="36" rx="10" fill="#dcfce7" stroke="#15803d" stroke-width="2"/><text x="73" y="106" fill="#14532d">4TL</text>
+          <rect x="232" y="8" width="120" height="34" rx="10" fill="#fff" stroke="#15803d" stroke-width="2"/><text x="292" y="31" fill="#0f172a">Anna</text>
+          <rect x="232" y="58" width="120" height="34" rx="10" fill="#fff" stroke="#15803d" stroke-width="2"/><text x="292" y="81" fill="#0f172a">Celina</text>
+          <rect x="232" y="108" width="120" height="34" rx="10" fill="#fff" stroke="#15803d" stroke-width="2"/><text x="292" y="131" fill="#0f172a">Filip</text>
+          <rect x="232" y="158" width="120" height="34" rx="10" fill="#fff" stroke="#15803d" stroke-width="2"/><text x="292" y="181" fill="#0f172a">Jakub …</text>
+        </g>
+      </svg>
+      <div class="gdzie-fk"><b>Klucz obcy:</b> zawsze po stronie <b>„wielu”</b> — <code>uczniowie.id_klasy</code>. Klasa nie zmieści listy uczniów w jednej komórce, ale każdy uczeń zmieści numer swojej klasy.</div>
+    </div>
+
+    <div class="zwiazek znm">
+      <span class="znak">N : M</span>
+      <h4>Uczniowie — koła zainteresowań</h4>
+      <p>Uczeń chodzi na <b>wiele</b> kół. Na koło chodzi <b>wielu</b> uczniów.</p>
+      <svg viewBox="0 0 360 200" role="img" aria-label="Trzech uczniów połączonych z kilkoma kołami, linie się krzyżują">
+        <g stroke="#6d28d9" stroke-width="3">
+          <line x1="128" y1="40" x2="232" y2="25"/><line x1="128" y1="40" x2="232" y2="75"/>
+          <line x1="128" y1="100" x2="232" y2="75"/><line x1="128" y1="100" x2="232" y2="125"/>
+          <line x1="128" y1="160" x2="232" y2="75"/><line x1="128" y1="160" x2="232" y2="125"/><line x1="128" y1="160" x2="232" y2="175"/>
+        </g>
+        <g font-family="Segoe UI,Arial" font-size="15" font-weight="700" text-anchor="middle">
+          <rect x="18" y="22" width="110" height="36" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/><text x="73" y="46" fill="#4c1d95">Celina</text>
+          <rect x="18" y="82" width="110" height="36" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/><text x="73" y="106" fill="#4c1d95">Filip</text>
+          <rect x="18" y="142" width="110" height="36" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/><text x="73" y="166" fill="#4c1d95">Hubert</text>
+          <rect x="232" y="8" width="120" height="34" rx="10" fill="#fff" stroke="#6d28d9" stroke-width="2"/><text x="292" y="31" fill="#0f172a">robotyka</text>
+          <rect x="232" y="58" width="120" height="34" rx="10" fill="#fff" stroke="#6d28d9" stroke-width="2"/><text x="292" y="81" fill="#0f172a">fotografia</text>
+          <rect x="232" y="108" width="120" height="34" rx="10" fill="#fff" stroke="#6d28d9" stroke-width="2"/><text x="292" y="131" fill="#0f172a">siatkówka</text>
+          <rect x="232" y="158" width="120" height="34" rx="10" fill="#fff" stroke="#6d28d9" stroke-width="2"/><text x="292" y="181" fill="#0f172a">INF.03</text>
+        </g>
+      </svg>
+      <div class="gdzie-fk"><b>Klucz obcy nie wystarczy!</b> Potrzebna jest <b>trzecia tabela — łącząca</b>: <code>uczniowie_kola(id_ucznia, id_kola)</code>. Jeden wiersz = jedna linia z rysunku. N:M rozpada się na dwa związki 1:N.</div>
+    </div>
+
+  </div>
+
+  <table class="porownanie">
+    <thead><tr><th>Związek</th><th>Z życia szkoły</th><th>Gdzie ląduje klucz obcy?</th></tr></thead>
+    <tbody>
+      <tr><th>1 : 1</th><td>klasa — wychowawca · uczeń — legitymacja</td><td>po jednej ze stron, z <code>UNIQUE</code></td></tr>
+      <tr><th>1 : N</th><td>klasa — uczniowie · nauczyciel — prowadzone koła · uczeń — jego oceny</td><td>po stronie <b>„wielu”</b> (<code>uczniowie.id_klasy</code>, <code>oceny.id_ucznia</code>)</td></tr>
+      <tr><th>N : M</th><td>uczniowie — koła · uczniowie — przedmioty (przez oceny)</td><td>w <b>nowej tabeli łączącej</b> — dwa klucze obce</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ================= CZĘŚĆ 6: STEPPER ================= -->
+  <h2 class="przelam"><span class="nr">6</span> Podróż po kluczach — klatka po klatce <span class="lekcja">lekcja 2</span></h2>
+  <p class="wstep">
+    Odpowiedź na jedno proste pytanie bywa rozrzucona po kilku tabelach. <b>Klucze obce to drogowskazy</b>:
+    mówią, do której tabeli i do którego wiersza iść dalej. Klikaj <b>Dalej →</b> (albo strzałki ← → na klawiaturze).
+  </p>
+
+  <div class="stepper" id="podroz" tabindex="0">
+    <div class="st-gora">
+      <div class="st-kod" id="pdKod"></div>
+      <div class="st-panel">
+        <div class="st-liczniki">
+          <div class="st-licznik">tabele: <span id="pdTabele">0</span></div>
+          <div class="st-licznik">zapytania: <span id="pdZapytania">0</span></div>
+          <div class="st-licznik fiolet" id="pdZwiazek">związek: –</div>
+          <div class="st-licznik zielony" id="pdEtap">krok 0</div>
+        </div>
+        <div class="st-tytul" id="pdTytul"></div>
+        <p class="st-opis" id="pdOpis"></p>
+      </div>
+    </div>
+
+    <div class="st-nawigacja">
+      <button type="button" class="jasny" id="pdWstecz">← Wstecz</button>
+      <button type="button" id="pdDalej">Dalej →</button>
+      <button type="button" class="jasny" id="pdAuto">▶ Odtwórz</button>
+      <button type="button" class="jasny" id="pdReset">↺ Od nowa</button>
+      <div class="st-kropki" id="pdKropki"></div>
+    </div>
+
+    <div class="st-plansze" id="pdPlansze"></div>
+    <div class="st-stopka" id="pdStopka"></div>
+  </div>
+
+<script>
+(function(){
+  // Dane — fragmenty prawdziwych tabel z bazy szkola (szkola.sql)
+  var T = {
+    uczniowie: {
+      tytul:'📋 uczniowie', opis:'— fragment',
+      kol:['id','imie','nazwisko','id_klasy'], pk:['id'], fk:['id_klasy'],
+      w:[
+        [1,'Anna','Kowalska',3],[2,'Bartosz','Nowak',1],[3,'Celina','Wójcik',3],
+        [4,'Damian','Zieliński',2],[5,'Ewa','Lewandowska',1],[6,'Filip','Szymański',3],
+        [7,'Gabriela','Dąbrowska',5],[8,'Hubert','Kamiński',1],[9,'Iwona','Mazur',2],
+        [10,'Jakub','Piotrowski',3],
+        [21,'Maksymilian','Wieczorek',3],[22,'Mateusz','Wiśniewski',3],
+        [23,'Oskar','Baran',3],[24,'Kamil','Grabowski',3]
+      ],
+      ukryte:[21,22,23,24]
+    },
+    klasy: {
+      tytul:'📋 klasy', opis:'',
+      kol:['id','nazwa','sala','id_wychowawcy'], pk:['id'], fk:['id_wychowawcy'],
+      w:[[1,'4TI',112,3],[2,'5TM',21,9],[3,'4TL',205,4],[4,'2TI',114,1],[5,'1TP',210,8]]
+    },
+    nauczyciele: {
+      tytul:'📋 nauczyciele', opis:'',
+      kol:['id','imie','nazwisko'], pk:['id'], fk:[],
+      w:[[1,'Marek','Nowicki'],[2,'Agnieszka','Wróbel'],[3,'Tomasz','Kaczmarek'],[4,'Joanna','Pawlak'],
+         [5,'Krzysztof','Michalski'],[6,'Beata','Król'],[7,'Paweł','Jabłoński'],[8,'Monika','Adamczyk'],
+         [9,'Rafał','Górski'],[10,'Ewelina','Sikora']]
+    },
+    uczniowie_kola: {
+      tytul:'🔀 uczniowie_kola', opis:'— zapisy uczniów 1–10',
+      kol:['id_ucznia','id_kola','data_zapisu'], pk:['id_ucznia','id_kola'], fk:['id_ucznia','id_kola'],
+      w:[[2,5,'2026-09-21'],[3,2,'2026-09-09'],[3,3,'2026-09-22'],[5,3,'2026-09-15'],
+         [6,3,'2026-09-17'],[6,4,'2026-09-10'],[8,3,'2026-09-15'],[8,4,'2026-09-13'],
+         [8,5,'2026-09-17'],[10,1,'2026-09-10'],[10,4,'2026-09-10']]
+    },
+    kola: {
+      tytul:'📋 kola', opis:'',
+      kol:['id','nazwa','dzien'], pk:['id'], fk:[],
+      w:[[1,'Koło e-sportowe','pt'],[2,'Koło robotyki','wt'],[3,'Koło fotograficzne','sr'],
+         [4,'Szkolny klub siatkówki','czw'],[5,'Koło przygotowań do INF.03','pon'],[6,'Koło szachowe','sr']]
+    }
+  };
+  // klucz wiersza = wartości klucza głównego połączone myślnikiem
+  function kluczW(t, w){
+    return T[t].pk.map(function(p){ return w[T[t].kol.indexOf(p)]; }).join('-');
+  }
+
+  // kod: [tekst, 'akt' | 'zrobione' | 'kom']
+  var KROKI = [
+    {
+      bloki:['uczniowie','klasy','nauczyciele'], tabele:0, zapytania:0, zwiazek:'–',
+      kod:[['-- Pytanie:', 'kom'], ['-- Kto jest wychowawcą Anny Kowalskiej', 'kom'], ['-- i w której sali spotyka się jej klasa?', 'kom']],
+      tytul:'Pytanie: kto jest wychowawcą Anny Kowalskiej?',
+      opis:'W tabeli <b>uczniowie</b> nie ma ani wychowawcy, ani sali. Jest tylko liczba w kolumnie <b>id_klasy</b>. To nasz pierwszy drogowskaz.',
+      stopka:'Fioletowe nagłówki 🔗 to klucze obce — drogowskazy. Pomarańczowe 🔑 to klucze główne — cele drogowskazów.',
+      stan:{}
+    },
+    {
+      bloki:['uczniowie','klasy','nauczyciele'], przygas:['klasy','nauczyciele'], tabele:1, zapytania:1, zwiazek:'–',
+      kod:[['SELECT id_klasy', 'akt'], ['FROM uczniowie', 'akt'], ["WHERE nazwisko = 'Kowalska';", 'akt'], ['-- wynik: 3', 'kom']],
+      tytul:'Krok 1: znajdź Annę w tabeli <code>uczniowie</code>',
+      opis:'Wiersz Anny ma <code>id_klasy = <b>3</b></code>. Liczba 3 sama w sobie nic nie mówi — to <b>adres</b> wiersza w innej tabeli.',
+      stopka:'🔗 uczniowie.id_klasy = 3 &nbsp;→&nbsp; idź do tabeli klasy, do wiersza z id = 3',
+      stan:{ uczniowie:{pasuje:['1'], cel:[['1','id_klasy']]} }
+    },
+    {
+      bloki:['uczniowie','klasy','nauczyciele'], przygas:['nauczyciele'], tabele:2, zapytania:2, zwiazek:'uczeń → klasa',
+      kod:[['SELECT id_klasy FROM uczniowie', 'zrobione'], ["WHERE nazwisko = 'Kowalska';  -- 3", 'zrobione'],
+           ['SELECT nazwa, sala, id_wychowawcy', 'akt'], ['FROM klasy', 'akt'], ['WHERE id = 3;', 'akt']],
+      tytul:'Krok 2: skok do tabeli <code>klasy</code>, wiersz <code>id = 3</code>',
+      opis:'Klasa nr 3 to <b>4TL</b>, sala <b>205</b>. Mamy już salę! Wychowawcy dalej nie widać — jest kolejny drogowskaz: <code>id_wychowawcy = <b>4</b></code>.',
+      stopka:'🔗 klasy.id_wychowawcy = 4 &nbsp;→&nbsp; idź do tabeli nauczyciele, do wiersza z id = 4',
+      stan:{ uczniowie:{wynik:['1'], cel:[['1','id_klasy']]}, klasy:{pasuje:['3'], celpk:[['3','id']], cel:[['3','id_wychowawcy']]} }
+    },
+    {
+      bloki:['uczniowie','klasy','nauczyciele'], tabele:3, zapytania:3, zwiazek:'klasa → wychowawca',
+      kod:[['SELECT id_klasy FROM uczniowie', 'zrobione'], ["WHERE nazwisko = 'Kowalska';  -- 3", 'zrobione'],
+           ['SELECT nazwa, sala, id_wychowawcy', 'zrobione'], ['FROM klasy WHERE id = 3;     -- 4', 'zrobione'],
+           ['SELECT imie, nazwisko', 'akt'], ['FROM nauczyciele', 'akt'], ['WHERE id = 4;', 'akt']],
+      tytul:'Krok 3: skok do tabeli <code>nauczyciele</code>, wiersz <code>id = 4</code>',
+      opis:'Nauczyciel nr 4 to <b>Joanna Pawlak</b>. Koniec drogi — w tej tabeli nie ma już kluczy obcych.',
+      stopka:'Każdy skok wygląda tak samo: wartość klucza obcego = wartość klucza głównego w drugiej tabeli.',
+      stan:{ uczniowie:{wynik:['1'], cel:[['1','id_klasy']]}, klasy:{wynik:['3'], cel:[['3','id_wychowawcy']]}, nauczyciele:{pasuje:['4'], celpk:[['4','id']]} }
+    },
+    {
+      bloki:['uczniowie','klasy','nauczyciele'], tabele:3, zapytania:3, zwiazek:'N:1 i 1:1', koniec:true,
+      kod:[['-- Odpowiedź:', 'kom'], ['-- Anna Kowalska → klasa 4TL, sala 205', 'kom'], ['-- wychowawczyni: Joanna Pawlak', 'kom']],
+      tytul:'✅ Odpowiedź złożona z trzech tabel',
+      opis:'Anna → <b>4TL</b> (sala 205) → wychowawczyni <b>Joanna Pawlak</b>. Żadna informacja nie jest zapisana dwa razy: nazwa klasy jest tylko w <b>klasy</b>, nazwisko nauczycielki tylko w <b>nauczyciele</b>.',
+      stopka:'Zmiana wychowawcy 4TL? Poprawiamy <b>jedną</b> komórkę w tabeli klasy — wszyscy uczniowie tej klasy „widzą” zmianę od razu.',
+      stan:{ uczniowie:{wynik:['1']}, klasy:{wynik:['3']}, nauczyciele:{wynik:['4']} }
+    },
+    {
+      bloki:['klasy','uczniowie'], tabele:2, zapytania:1, zwiazek:'1 : N',
+      kod:[['-- W drugą stronę: kto chodzi do 4TL?', 'kom'], ['SELECT imie, nazwisko', 'akt'], ['FROM uczniowie', 'akt'], ['WHERE id_klasy = 3;', 'akt']],
+      tytul:'W drugą stronę: kto jeszcze chodzi do 4TL?',
+      opis:'Teraz szukamy wszystkich uczniów, których drogowskaz wskazuje klasę nr 3. Jest ich <b>8</b>. Jedna klasa → wielu uczniów: to związek <b>1:N</b>. Klucz obcy siedzi po stronie „wielu” (w uczniach).',
+      stopka:'1 wiersz w klasy ⟷ 8 wierszy w uczniowie. Wartość 3 powtarza się w kolumnie id_klasy — w kluczu obcym to normalne.',
+      stan:{ klasy:{wynik:['3'], celpk:[['3','id']]}, uczniowie:{pasuje:['1','3','6','10','21','22','23','24'], pokaz:['21','22','23','24'],
+             cel:[['1','id_klasy'],['3','id_klasy'],['6','id_klasy'],['10','id_klasy'],['21','id_klasy'],['22','id_klasy'],['23','id_klasy'],['24','id_klasy']]} }
+    },
+    {
+      bloki:['uczniowie','uczniowie_kola','kola'], przygas:['kola'], tabele:2, zapytania:1, zwiazek:'N : M',
+      kod:[['-- Na jakie koła chodzi Celina (id = 3)?', 'kom'], ['SELECT id_kola', 'akt'], ['FROM uczniowie_kola', 'akt'], ['WHERE id_ucznia = 3;', 'akt'], ['-- wynik: 2, 3', 'kom']],
+      tytul:'N:M — na jakie koła chodzi Celina?',
+      opis:'W tabeli <b>uczniowie</b> nie ma kolumny „koło” — Celina chodzi na <b>dwa</b>, a w komórce mieści się tylko jedna wartość. Dlatego zapisy leżą w osobnej <b>tabeli łączącej</b>. Celina ma w niej <b>2 wiersze</b>.',
+      stopka:'🔗 uczniowie_kola.id_kola = 2 i 3 &nbsp;→&nbsp; idź do tabeli kola, do wierszy z id = 2 i 3',
+      stan:{ uczniowie:{wynik:['3']}, uczniowie_kola:{pasuje:['3-2','3-3'], cel:[['3-2','id_kola'],['3-3','id_kola']]} }
+    },
+    {
+      bloki:['uczniowie','uczniowie_kola','kola'], tabele:3, zapytania:2, zwiazek:'N : M',
+      kod:[['SELECT id_kola FROM uczniowie_kola', 'zrobione'], ['WHERE id_ucznia = 3;  -- 2, 3', 'zrobione'],
+           ['SELECT nazwa, dzien', 'akt'], ['FROM kola', 'akt'], ['WHERE id IN (2, 3);', 'akt']],
+      tytul:'Skok do tabeli <code>kola</code>',
+      opis:'Celina chodzi na <b>robotykę</b> (wtorek) i <b>fotografię</b> (środa).',
+      stopka:'Tabela łącząca ma dwa klucze obce — po jednym do każdej z łączonych tabel.',
+      stan:{ uczniowie:{wynik:['3']}, uczniowie_kola:{wynik:['3-2','3-3']}, kola:{pasuje:['2','3'], celpk:[['2','id'],['3','id']]} }
+    },
+    {
+      bloki:['uczniowie','uczniowie_kola','kola'], tabele:3, zapytania:2, zwiazek:'N : M', koniec:true,
+      kod:[['-- A w drugą stronę: kto chodzi na fotografię (id = 3)?', 'kom'], ['SELECT id_ucznia', 'akt'], ['FROM uczniowie_kola', 'akt'], ['WHERE id_kola = 3;', 'akt']],
+      tytul:'✅ Dlaczego to N:M?',
+      opis:'Na fotografię chodzą Celina, Ewa, Filip i Hubert (a w całej bazie aż <b>14 osób</b>). <b>Uczeń → wiele kół</b> i <b>koło → wielu uczniów</b>. Taki związek zawsze wymaga tabeli łączącej z <b>kluczem złożonym</b> <code>(id_ucznia, id_kola)</code>.',
+      stopka:'N:M = dwa związki 1:N spotykające się w tabeli łączącej: uczeń 1:N zapisy, koło 1:N zapisy.',
+      stan:{ kola:{wynik:['3'], celpk:[['3','id']]}, uczniowie_kola:{pasuje:['3-3','5-3','6-3','8-3'], cel:[['3-3','id_ucznia'],['5-3','id_ucznia'],['6-3','id_ucznia'],['8-3','id_ucznia']]},
+             uczniowie:{pasuje:['3','5','6','8'], celpk:[['3','id'],['5','id'],['6','id'],['8','id']]} }
+    }
+  ];
+
+  var root = document.getElementById('podroz');
+  if(!root) return;
+  var plansze = document.getElementById('pdPlansze');
+  var kod = document.getElementById('pdKod');
+  var kropki = document.getElementById('pdKropki');
+  var btnD = document.getElementById('pdDalej');
+  var btnW = document.getElementById('pdWstecz');
+  var btnAuto = document.getElementById('pdAuto');
+  var krok = 0, poprzedni = -1, timer = null;
+
+  // zbuduj bloki tabel raz
+  var bloki = {};
+  Object.keys(T).forEach(function(nazwa){
+    var t = T[nazwa];
+    var div = document.createElement('div');
+    div.className = 'st-blok';
+    var h = '<div class="tytul">' + t.tytul + ' <small>' + t.opis + '</small></div>' +
+            '<div class="st-tabela"><table class="st-dane"><thead><tr>';
+    t.kol.forEach(function(k){
+      var kl = t.pk.indexOf(k) > -1 ? 'kol-pk' : (t.fk.indexOf(k) > -1 ? 'kol-fk' : '');
+      var ik = (t.pk.indexOf(k) > -1 ? '🔑' : '') + (t.fk.indexOf(k) > -1 ? '🔗' : '');
+      h += '<th class="' + kl + '">' + (ik ? ik + ' ' : '') + k + '</th>';
+    });
+    h += '</tr></thead><tbody>';
+    t.w.forEach(function(w){
+      h += '<tr data-k="' + kluczW(nazwa, w) + '">';
+      w.forEach(function(v, i){ h += '<td data-kol="' + t.kol[i] + '">' + v + '</td>'; });
+      h += '</tr>';
+    });
+    h += '</tbody></table></div>';
+    div.innerHTML = h;
+    plansze.appendChild(div);
+    bloki[nazwa] = div;
+  });
+
+  KROKI.forEach(function(k, i){
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = i;
+    b.title = 'Krok ' + i;
+    b.setAttribute('aria-label', 'Krok ' + i);
+    b.addEventListener('click', function(){ stop(); idz(i); });
+    kropki.appendChild(b);
+  });
+
+  function ma(lista, x){ return !!lista && lista.indexOf(x) > -1; }
+  function maKomorke(lista, k, kol){
+    return !!lista && lista.some(function(p){ return p[0] === k && p[1] === kol; });
+  }
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function idz(i){
+    krok = Math.max(0, Math.min(KROKI.length - 1, i));
+    var k = KROKI[krok];
+
+    kod.innerHTML = k.kod.map(function(l){
+      return '<span class="lin ' + l[1] + '">' + esc(l[0]) + '</span>';
+    }).join('');
+
+    // kolejność bloków zgodna z kolejnością podróży
+    k.bloki.forEach(function(n){ plansze.appendChild(bloki[n]); });
+
+    Object.keys(T).forEach(function(nazwa){
+      var blok = bloki[nazwa];
+      blok.hidden = !ma(k.bloki, nazwa);
+      blok.classList.toggle('przygaszony', ma(k.przygas, nazwa));
+      var s = k.stan[nazwa] || {};
+      var ukryte = (T[nazwa].ukryte || []).map(String);
+      blok.querySelector('.st-tabela').classList.toggle('gotowe', !!k.koniec && !!(s.wynik && s.wynik.length));
+      Array.prototype.forEach.call(blok.querySelectorAll('tbody tr'), function(tr){
+        var key = tr.dataset.k;
+        var cls = '';
+        if(ma(s.wynik, key)) cls = 'wynik';
+        else if(ma(s.pasuje, key)) cls = 'pasuje';
+        if(ma(ukryte, key) && !ma(s.pokaz, key)) cls = 'ukryty';
+        if(ma(s.pokaz, key) && krok !== poprzedni) cls += ' swiezy';
+        tr.className = cls;
+        Array.prototype.forEach.call(tr.cells, function(td){
+          td.classList.toggle('cel', maKomorke(s.cel, key, td.dataset.kol));
+          td.classList.toggle('cel-pk', maKomorke(s.celpk, key, td.dataset.kol));
+        });
+      });
+    });
+
+    document.getElementById('pdTabele').textContent = k.tabele;
+    document.getElementById('pdZapytania').textContent = k.zapytania;
+    document.getElementById('pdZwiazek').textContent = 'związek: ' + k.zwiazek;
+    document.getElementById('pdEtap').textContent = 'krok ' + krok + ' / ' + (KROKI.length - 1);
+    document.getElementById('pdTytul').innerHTML = k.tytul;
+    document.getElementById('pdOpis').innerHTML = k.opis;
+    document.getElementById('pdStopka').innerHTML = k.stopka;
+
+    Array.prototype.forEach.call(kropki.children, function(b, i2){
+      b.classList.toggle('akt', i2 === krok);
+      b.classList.toggle('przed', i2 < krok);
+    });
+    btnW.disabled = krok === 0;
+    btnD.disabled = krok === KROKI.length - 1;
+    if(btnD.disabled) stop();
+    poprzedni = krok;
+  }
+
+  function stop(){
+    if(timer){ clearInterval(timer); timer = null; btnAuto.textContent = '▶ Odtwórz'; }
+  }
+
+  btnD.addEventListener('click', function(){ stop(); idz(krok + 1); });
+  btnW.addEventListener('click', function(){ stop(); idz(krok - 1); });
+  document.getElementById('pdReset').addEventListener('click', function(){ stop(); idz(0); });
+  btnAuto.addEventListener('click', function(){
+    if(timer){ stop(); return; }
+    if(krok === KROKI.length - 1) idz(0);
+    btnAuto.textContent = '⏸ Pauza';
+    timer = setInterval(function(){
+      if(krok >= KROKI.length - 1){ stop(); return; }
+      idz(krok + 1);
+    }, 3200);
+  });
+  root.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight'){ e.preventDefault(); stop(); idz(krok + 1); }
+    if(e.key === 'ArrowLeft'){  e.preventDefault(); stop(); idz(krok - 1); }
+  });
+
+  idz(0);
+})();
+</script>
+
+  <!-- ================= CZĘŚĆ 7: CECHY ================= -->
+  <h2 class="przelam"><span class="nr">7</span> Cechy relacyjnej bazy danych <span class="lekcja">lekcja 3</span></h2>
+  <p class="wstep">To, czego egzamin oczekuje pod hasłem „opisz cechy relacyjnej bazy danych”. Każdą cechę widziałeś już w bazie <code>szkola</code>.</p>
+
+  <div class="cechy">
+    <div class="cecha"><span class="ikona">📋</span><div><b>Dane są w tabelach</b><span>Tabela = relacja. Wszystko, co baza wie, leży w wierszach i kolumnach.</span></div></div>
+    <div class="cecha"><span class="ikona">🔑</span><div><b>Każdy wiersz jest unikalny</b><span>Pilnuje tego klucz główny. Dwóch identycznych wierszy nie ma.</span></div></div>
+    <div class="cecha"><span class="ikona">1️⃣</span><div><b>W komórce jedna wartość</b><span>Żadnych list „matematyka, fizyka” w jednym polu. To <b>atomowość</b> — wrócimy do niej przy postaciach normalnych.</span></div></div>
+    <div class="cecha"><span class="ikona">🏷️</span><div><b>Kolumna ma nazwę i jeden typ</b><span>Nazwy kolumn w tabeli się nie powtarzają, a każda wartość w kolumnie pochodzi z tej samej dziedziny.</span></div></div>
+    <div class="cecha"><span class="ikona">🔀</span><div><b>Kolejność wierszy i kolumn nie ma znaczenia</b><span>Baza nie obiecuje żadnej kolejności. Chcesz porządku — napisz <code>ORDER BY</code>.</span></div></div>
+    <div class="cecha"><span class="ikona">🔗</span><div><b>Tabele łączą się przez klucze</b><span>Nie przez położenie ani kopie danych — tylko przez klucz obcy wskazujący klucz główny.</span></div></div>
+    <div class="cecha"><span class="ikona">💬</span><div><b>Obsługa językiem SQL</b><span>Jeden standardowy język do pytania i zmieniania danych — w MySQL, MariaDB, PostgreSQL, SQL Server…</span></div></div>
+    <div class="cecha"><span class="ikona">🛡️</span><div><b>SZBD pilnuje integralności</b><span>Baza sama odrzuca dane, które łamią reguły. Szczegóły poniżej.</span></div></div>
+  </div>
+
+  <h3>🛡️ Integralność danych — baza, która się broni</h3>
+  <p class="wstep">„Integralność” = dane są spójne i sensowne. Poniżej prawdziwe komunikaty z MariaDB — dokładnie takie zobaczysz w phpMyAdmin.</p>
+
+  <div class="siatka trzy integralnosc">
+    <div class="karta k-pk">
+      <h4>🔑 Integralność encji</h4>
+      <p class="cel">Klucz główny jest unikalny i nigdy pusty.</p>
+<pre>-- klasa o id = 1 już istnieje
+INSERT INTO klasy
+  (id, nazwa, profil, id_wychowawcy)
+VALUES
+  (1, '3TI', 'informatyczny', 2);</pre>
+      <div class="pma-blad"><b>#1062</b> - Duplicate entry '1' for key 'PRIMARY'</div>
+    </div>
+
+    <div class="karta k-fk">
+      <h4>🔗 Integralność referencyjna</h4>
+      <p class="cel">Klucz obcy wskazuje <b>istniejący</b> wiersz. Nie da się „urwać” drogowskazu.</p>
+<pre>-- nie ma klasy nr 99
+INSERT INTO uczniowie (pesel, imie,
+  nazwisko, id_klasy, data_urodzenia)
+VALUES ('11111111111', 'Test',
+  'Testowy', 99, '2010-01-01');</pre>
+      <div class="pma-blad"><b>#1452</b> - Cannot add or update a child row: a foreign key constraint fails (`szkola`.`uczniowie`, CONSTRAINT `uczniowie_klasy` …)</div>
+<pre>-- w klasie 3 są uczniowie!
+DELETE FROM klasy WHERE id = 3;</pre>
+      <div class="pma-blad"><b>#1451</b> - Cannot delete or update a parent row: a foreign key constraint fails (`szkola`.`uczniowie`, CONSTRAINT `uczniowie_klasy` …)</div>
+    </div>
+
+    <div class="karta k-ok">
+      <h4>🏷️ Integralność dziedzinowa</h4>
+      <p class="cel">Wartość musi pasować do typu kolumny i do <code>NOT NULL</code>.</p>
+<pre>INSERT INTO przedmioty
+  (nazwa, godziny_tyg)
+VALUES ('Test', 'dużo');</pre>
+      <div class="pma-blad"><b>#1366</b> - Incorrect integer value: 'dużo' for column `szkola`.`przedmioty`.`godziny_tyg`</div>
+<pre>-- uczeń bez imienia
+INSERT INTO uczniowie (pesel, imie,
+  nazwisko, id_klasy, data_urodzenia)
+VALUES ('11111111112', NULL,
+  'X', 1, '2010-01-01');</pre>
+      <div class="pma-blad"><b>#1048</b> - Column 'imie' cannot be null</div>
+    </div>
+  </div>
+
+  <div class="zasada">
+    <h3>💡 Parent i child — kto komu?</h3>
+    <p><b>parent</b> (rodzic) = tabela z kluczem głównym, na który ktoś wskazuje (<code>klasy</code>).
+       <b>child</b> (dziecko) = tabela z kluczem obcym (<code>uczniowie</code>).
+       Nie usuniesz rodzica, póki ma dzieci (#1451). Nie dodasz dziecka bez rodzica (#1452).</p>
+  </div>
+
+  <!-- ================= PODSUMOWANIE ================= -->
+  <div class="uwaga">
+    <h3>⚠️ Najczęstsze pomyłki</h3>
+    <ul>
+      <li><b>Klucz główny to „pierwsza kolumna”</b> — nie! To kolumna oznaczona jako <code>PRIMARY KEY</code>, gdziekolwiek stoi.</li>
+      <li><b>Klucz obcy musi być unikalny</b> — nie! Wartości klucza obcego <b>powtarzają się</b> (8 uczniów z <code>id_klasy = 3</code>). Unikalny jest klucz główny, na który wskazuje.</li>
+      <li><b>Relacja = powiązanie</b> — w teorii relacja to <b>tabela</b>. Powiązanie to <b>związek</b>.</li>
+      <li><b>Moc relacji = 1:N</b> — nie! Moc to <b>liczba wierszy</b>. 1:N to <b>krotność związku</b>.</li>
+      <li><b><code>NULL</code> = 0</b> — nie! <code>NULL</code> to brak wartości. Średnia 0 i średnia nieznana to dwie różne rzeczy.</li>
+      <li><b>PESEL, telefon, kod pocztowy jako liczba</b> — to tekst złożony z cyfr: <code>CHAR</code> / <code>VARCHAR</code>.</li>
+      <li><b>N:M „załatwię kluczem obcym”</b> — nie da się. Zawsze potrzebna jest <b>tabela łącząca</b>.</li>
+    </ul>
+  </div>
+
+  <div class="stop">
+    <b>Co dalej?</b><br>
+    Postaci normalne — czyli jak sprawdzić, czy dane są dobrze podzielone na tabele.
+  </div>
+
+</div>
+</body>
+</html>

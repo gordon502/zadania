@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JOIN — ściąga</title>
+<style>
+  :root{
+    --tlo:#f4f6fb;
+    --karta:#ffffff;
+    --granat:#1e3a8a;
+    --niebieski:#2563eb;
+    --jasny:#dbeafe;
+    --zielony:#15803d;
+    --jasnyziel:#dcfce7;
+    --pomarancz:#c2410c;
+    --jasnypom:#ffedd5;
+    --fiolet:#6d28d9;
+    --jasnyfiol:#ede9fe;
+    --szary:#475569;
+    --linia:#cbd5e1;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:28px 18px 60px;
+    background:var(--tlo); color:#0f172a;
+    font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    font-size:17px; line-height:1.5;
+  }
+  .strona{max-width:1180px;margin:0 auto}
+  h1{font-size:2.6rem;text-align:center;margin:0 0 6px;color:var(--granat);letter-spacing:-.5px}
+  .podtytul{text-align:center;color:var(--szary);font-size:1.15rem;margin:0 0 34px}
+  h2{font-size:1.9rem;color:var(--granat);margin:46px 0 6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  h2 .nr{
+    background:var(--granat);color:#fff;border-radius:12px;width:46px;height:46px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:1.4rem;flex:none;
+  }
+  h3{font-size:1.3rem;color:var(--granat);margin:26px 0 10px}
+  .wstep{color:var(--szary);margin:0 0 18px;font-size:1.05rem}
+  code{font-family:"SF Mono",Menlo,Consolas,monospace}
+
+  /* ---------- PRZED / PO ---------- */
+  .dwa{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px}
+  .dwa > .kol{flex:1 1 450px;min-width:0;background:#fff;border:3px solid var(--linia);border-radius:16px;padding:14px 16px}
+  .dwa > .kol.przed{border-color:#dc2626}
+  .dwa > .kol.po{border-color:var(--zielony)}
+  .dwa h4{margin:0 0 8px;font-size:1.2rem}
+  .dwa .przed h4{color:#b91c1c}
+  .dwa .po h4{color:var(--zielony)}
+  .krok-sql{display:flex;gap:10px;align-items:flex-start;margin:6px 0}
+  .krok-sql .nrk{flex:none;width:28px;height:28px;border-radius:50%;background:#dc2626;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:.9rem;margin-top:4px}
+  .krok-sql pre{flex:1}
+  .wynik-maly{font-size:.88rem;color:var(--szary);margin:2px 0 0 38px}
+
+  /* ---------- TABELA KLUCZY ---------- */
+  table.porownanie{border-collapse:collapse;width:100%;margin-top:14px;font-size:1rem;background:#fff}
+  table.porownanie th,table.porownanie td{border:2px solid var(--linia);padding:8px 12px;vertical-align:top}
+  table.porownanie thead th{background:var(--granat);color:#fff;font-size:1.02rem;text-align:left}
+  table.porownanie tbody th{background:#f1f5f9;color:var(--granat);text-align:left}
+  table.porownanie code{background:var(--jasnyfiol);color:var(--fiolet);padding:1px 6px;border-radius:5px;font-weight:600}
+  table.porownanie td.typ{font-weight:700;color:var(--zielony);white-space:nowrap}
+
+  /* ---------- SZKIELET ---------- */
+  .szkielet{background:#0f172a;color:#e2e8f0;border-radius:14px;padding:6px 20px 14px;overflow-x:auto}
+  .szkielet .wiersz{display:grid;grid-template-columns:330px 1fr;gap:18px;align-items:baseline;padding:9px 0;border-bottom:1px dashed #334155}
+  .szkielet .wiersz:last-child{border-bottom:none}
+  .szkielet .kw{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:1.08rem;font-weight:700;color:#7dd3fc;white-space:nowrap}
+  .szkielet .kw.nowe{color:#fbbf24}
+  .szkielet .kw .opc{color:#64748b;font-size:.8rem;font-weight:400;display:block}
+  .szkielet .cm{font-size:1rem;color:#cbd5e1}
+  .szkielet .cm b{color:#fff}
+  .szkielet .cm em{color:#94a3b8;font-style:normal;font-size:.9rem;display:block}
+
+  /* ---------- KARTY ---------- */
+  .siatka{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:16px;margin-top:16px}
+  .karta{background:var(--karta);border:2px solid var(--linia);border-radius:14px;padding:14px 16px 16px}
+  .karta h4{margin:0 0 4px;font-size:1.15rem;color:var(--granat);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .karta h4 code{background:var(--jasny);color:var(--granat);padding:2px 8px;border-radius:6px;font-size:1rem}
+  .karta p.cel{margin:0 0 8px;font-size:.95rem;color:var(--szary)}
+  .karta.k-left{border-color:var(--pomarancz)} .karta.k-left h4{color:var(--pomarancz)}
+  .karta.k-left h4 code{background:var(--jasnypom);color:var(--pomarancz)}
+  pre{
+    margin:0;background:#f1f5f9;border-left:4px solid var(--niebieski);border-radius:0 8px 8px 0;
+    padding:10px 12px;overflow-x:auto;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:.93rem;line-height:1.55;
+  }
+  pre + pre{margin-top:8px}
+  pre .on{background:#fde68a;border-radius:3px}
+  .wynik{margin-top:8px;font-size:.9rem;color:var(--zielony);background:var(--jasnyziel);border-radius:8px;padding:6px 10px}
+  .wynik b{color:#14532d}
+  .wynik.zly{color:#b91c1c;background:#fee2e2}
+  .wynik.zly b{color:#7f1d1d}
+  table.mini{border-collapse:collapse;font-size:.88rem;margin-top:8px;width:100%}
+  table.mini th,table.mini td{border:1px solid var(--linia);padding:3px 8px;text-align:left}
+  table.mini thead th{background:var(--jasny);color:var(--granat)}
+  table.mini td.null{color:#94a3b8;font-style:italic}
+  .pma-blad{
+    background:#fff0f0;border:1px solid #e05252;border-radius:6px;padding:7px 11px;
+    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:.85rem;color:#a40000;margin-top:8px;
+  }
+  .pma-blad b{color:#7f1d1d}
+
+  .zasada{margin-top:16px;background:var(--jasnyziel);border:2px solid var(--zielony);border-radius:14px;padding:14px 18px}
+  .zasada h3{margin:0 0 6px;color:#14532d}
+  .zasada p{margin:0;font-size:1.05rem}
+  .uwaga{margin-top:26px;background:#fff7ed;border:2px solid var(--pomarancz);border-radius:14px;padding:14px 18px}
+  .uwaga h3{margin:0 0 8px;color:var(--pomarancz)}
+  .uwaga ul{margin:0;padding-left:22px}
+  .uwaga li{margin:6px 0}
+  .uwaga code{background:#ffedd5;padding:1px 6px;border-radius:5px}
+  .stop{margin-top:26px;text-align:center;background:#fee2e2;border:2px dashed #dc2626;border-radius:14px;padding:12px 18px;color:#991b1b;font-size:1.05rem}
+  .stop b{font-size:1.15rem}
+
+  /* ---------- STEPPER ---------- */
+  .stepper{background:var(--karta);border:3px solid var(--granat);border-radius:18px;padding:16px 18px 20px;margin-top:16px}
+  .stepper:focus{outline:3px solid var(--niebieski);outline-offset:3px}
+  .st-gora{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch}
+  .st-kod{flex:1 1 400px;background:#0f172a;border-radius:12px;padding:12px 10px;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:.98rem;line-height:1.45}
+  .st-kod .lin{display:block;padding:3px 10px;border-radius:7px;color:#64748b;transition:background-color .3s,color .3s;white-space:pre-wrap}
+  .st-kod .lin.akt{background:#1d4ed8;color:#fff;font-weight:700}
+  .st-kod .lin.zrobione{color:#7dd3fc}
+  .st-kod .lin.kom{color:#fbbf24}
+  .st-kod .lin.bonus{background:#b45309;color:#fff;font-weight:700}
+  .st-panel{flex:1 1 320px;display:flex;flex-direction:column;gap:10px}
+  .st-liczniki{display:flex;gap:10px;flex-wrap:wrap}
+  .st-licznik{background:var(--jasny);color:var(--granat);border-radius:10px;padding:6px 12px;font-size:.95rem;font-weight:700}
+  .st-licznik span{font-size:1.25rem;display:inline-block;min-width:22px}
+  .st-licznik.zielony{background:var(--jasnyziel);color:#14532d}
+  .st-tytul{font-size:1.25rem;font-weight:700;color:var(--granat)}
+  .st-tytul code{background:var(--jasny);padding:1px 8px;border-radius:6px;font-size:1.05rem}
+  .st-opis{margin:0;font-size:1rem;color:var(--szary)}
+  .st-opis b{color:#0f172a}
+  .st-nawigacja{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 10px;padding-top:12px;border-top:2px solid var(--linia)}
+  .st-nawigacja button{font:inherit;font-weight:700;cursor:pointer;border-radius:10px;padding:9px 16px;border:2px solid var(--granat);background:var(--granat);color:#fff;transition:filter .15s,opacity .15s}
+  .st-nawigacja button.jasny{background:#fff;color:var(--granat)}
+  .st-nawigacja button:hover:not(:disabled){filter:brightness(1.15)}
+  .st-nawigacja button:disabled{opacity:.35;cursor:not-allowed}
+  .st-kropki{display:flex;gap:7px;margin-left:auto;flex-wrap:wrap}
+  .st-kropki button{width:30px;height:30px;padding:0;border-radius:50%;border:2px solid var(--linia);background:#fff;color:var(--szary);font-size:.85rem;font-weight:700}
+  .st-kropki button.akt{background:var(--niebieski);border-color:var(--niebieski);color:#fff}
+  .st-kropki button.przed{background:var(--jasny);border-color:var(--niebieski);color:var(--granat)}
+
+  .st-plansze{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+  .st-blok{flex:1 1 300px;min-width:260px;transition:opacity .3s,filter .3s}
+  .st-blok.szeroki{flex-basis:100%}
+  .st-blok.przygaszony{opacity:.4;filter:saturate(.3)}
+  .st-blok.nowy{animation:wjazd .5s ease-out}
+  @keyframes wjazd{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .st-blok > .tytul{font-weight:700;color:var(--granat);margin-bottom:5px;font-size:1.02rem}
+  .st-blok > .tytul small{color:var(--szary);font-weight:400}
+  .st-tabela{overflow-x:auto;border-radius:10px;transition:box-shadow .3s}
+  .st-tabela.gotowe{box-shadow:0 0 0 3px var(--zielony)}
+  .st-tabela.bonus{box-shadow:0 0 0 3px var(--pomarancz)}
+  table.st-dane{border-collapse:collapse;width:100%;font-size:.93rem}
+  table.st-dane th,table.st-dane td{border:1px solid var(--linia);padding:4px 9px;text-align:left;white-space:nowrap;transition:background-color .35s}
+  table.st-dane thead th{background:var(--jasny);color:var(--granat)}
+  table.st-dane thead th.z-u{background:#e0f2fe;color:#075985}
+  table.st-dane thead th.z-k{background:#fef3c7;color:#92400e}
+  table.st-dane thead th.badanie{box-shadow:inset 0 0 0 3px var(--niebieski);background:#bfdbfe;color:var(--granat)}
+  table.st-dane td.badanie{box-shadow:inset 0 0 0 2px var(--niebieski)}
+  table.st-dane td.null{color:#94a3b8;font-style:italic}
+  table.st-dane tr.c1 td{background:#dbeafe}
+  table.st-dane tr.c2 td{background:#ffedd5}
+  table.st-dane tr.c3 td{background:#ede9fe}
+  table.st-dane tr.c5 td{background:#dcfce7}
+  table.st-dane tr.c1 td:first-child{box-shadow:inset 5px 0 0 #2563eb}
+  table.st-dane tr.c2 td:first-child{box-shadow:inset 5px 0 0 #c2410c}
+  table.st-dane tr.c3 td:first-child{box-shadow:inset 5px 0 0 #6d28d9}
+  table.st-dane tr.c5 td:first-child{box-shadow:inset 5px 0 0 #15803d}
+  table.st-dane tr.nic td{color:#94a3b8;font-style:italic}
+  table.st-dane tr.zle td{background:#fee2e2!important;color:#b91c1c!important;text-decoration:line-through}
+  table.st-dane tr.wynik td{background:var(--jasnyziel)!important;font-weight:700;color:#14532d!important}
+  table.st-dane tr.trafiony td{background:#dcfce7!important;color:#14532d;font-weight:600}
+  table.st-dane tr.chybiony td{background:#fff;color:#b91c1c;opacity:.75}
+  table.st-dane .kol-zle{background:#fee2e2!important;color:#b91c1c!important;text-decoration:line-through}
+  table.st-dane.drobna{font-size:.8rem}
+  table.st-dane.drobna th,table.st-dane.drobna td{padding:2px 7px}
+  .st-stopka{margin-top:12px;background:var(--jasny);border-radius:10px;padding:8px 12px;font-size:.98rem;color:var(--granat)}
+  .st-stopka code{background:#fff;padding:1px 6px;border-radius:5px}
+
+  @media print{
+    body{background:#fff;padding:0;font-size:11pt}
+    .strona{max-width:none}
+    h1{font-size:22pt}
+    h2{font-size:15pt;margin-top:18pt;page-break-after:avoid}
+    h3{page-break-after:avoid}
+    .karta,.uwaga,.zasada,.dwa > .kol,.stepper{break-inside:avoid;page-break-inside:avoid;box-shadow:none}
+    .przelam{page-break-before:always}
+    .siatka{grid-template-columns:1fr 1fr}
+    .szkielet{background:#fff;color:#000;border:1.5pt solid #000}
+    .szkielet .kw,.szkielet .kw.nowe{color:#000;text-decoration:underline}
+    .szkielet .cm,.szkielet .cm b{color:#000}
+    .st-nawigacja,.st-kropki{display:none}
+    .st-kod{background:#fff;border:1pt solid #000}
+    .st-kod .lin,.st-kod .lin.akt{color:#000;background:#fff}
+  }
+</style>
+</head>
+<body>
+<div class="strona">
+
+  <h1>JOIN — łączenie tabel</h1>
+  <p class="podtytul">Jak w <b>jednym</b> zapytaniu wyciągnąć dane z kilku tabel — ściąga na zajęcia (część 3, baza <code>szkola</code>)</p>
+
+  <!-- ================= 1. PO CO ================= -->
+  <h2><span class="nr">1</span> Po co JOIN? Koniec z przepisywaniem numerków</h2>
+  <p class="wstep">
+    Pamiętasz bazę <code>world</code>? Żeby poznać stolicę Polski, trzeba było odczytać liczbę z <code>kraje.stolica</code>
+    i wpisać ją do drugiego zapytania. W bazie <code>szkola</code> jest tak samo: uczeń ma tylko <b>numer</b> klasy.
+  </p>
+
+  <div class="dwa">
+    <div class="kol przed">
+      <h4>😩 Bez JOIN — dwa zapytania i kartka</h4>
+      <div class="krok-sql"><span class="nrk">1</span>
+<pre>SELECT imie, nazwisko, id_klasy
+FROM uczniowie
+WHERE nazwisko = 'Kowalska';</pre></div>
+      <div class="wynik-maly">→ Anna Kowalska, <b>3</b> … a co to jest „3”? Zapisuję na kartce.</div>
+      <div class="krok-sql"><span class="nrk">2</span>
+<pre>SELECT nazwa FROM klasy
+WHERE id = 3;</pre></div>
+      <div class="wynik-maly">→ 4TL. A teraz to samo dla 39 uczniów…</div>
+    </div>
+    <div class="kol po">
+      <h4>😎 Z JOIN — jedno zapytanie</h4>
+<pre>SELECT uczniowie.imie,
+       uczniowie.nazwisko,
+       klasy.nazwa
+FROM uczniowie
+JOIN klasy <span class="on">ON uczniowie.id_klasy = klasy.id</span>;</pre>
+      <table class="mini">
+        <thead><tr><th>imie</th><th>nazwisko</th><th>nazwa</th></tr></thead>
+        <tbody>
+          <tr><td>Anna</td><td>Kowalska</td><td>4TL</td></tr>
+          <tr><td>Bartosz</td><td>Nowak</td><td>4TI</td></tr>
+          <tr><td>Celina</td><td>Wójcik</td><td>4TL</td></tr>
+          <tr><td colspan="3" style="color:#94a3b8">… wszyscy 39 uczniów, każdy z nazwą swojej klasy</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="zasada">
+    <h3>💡 JOIN w jednym zdaniu</h3>
+    <p><code>JOIN</code> dokleja do każdego wiersza pierwszej tabeli <b>pasujący wiersz</b> drugiej tabeli.
+       Co znaczy „pasujący” — mówi warunek <code>ON</code>: zwykle <b>klucz obcy = klucz główny</b>.</p>
+  </div>
+
+  <!-- ================= 2. MAPA ON ================= -->
+  <h2><span class="nr">2</span> Ściąga do <code>ON</code> — wszystkie połączenia w bazie <code>szkola</code></h2>
+  <p class="wstep">Każdy klucz obcy to jedno możliwe połączenie. Szukasz, jak skleić dwie tabele? Znajdź je tutaj i przepisz warunek.</p>
+
+  <table class="porownanie">
+    <thead><tr><th>Chcę połączyć…</th><th>Warunek <code style="background:none;color:#fff">ON</code></th><th>Związek</th><th>Przykładowe pytanie</th></tr></thead>
+    <tbody>
+      <tr><th>uczniowie + klasy</th><td><code>uczniowie.id_klasy = klasy.id</code></td><td class="typ">N : 1</td><td>Do jakiej klasy chodzi uczeń?</td></tr>
+      <tr><th>klasy + nauczyciele</th><td><code>klasy.id_wychowawcy = nauczyciele.id</code></td><td class="typ">1 : 1</td><td>Kto jest wychowawcą klasy?</td></tr>
+      <tr><th>oceny + uczniowie</th><td><code>oceny.id_ucznia = uczniowie.id</code></td><td class="typ">N : 1</td><td>Czyja to ocena?</td></tr>
+      <tr><th>oceny + przedmioty</th><td><code>oceny.id_przedmiotu = przedmioty.id</code></td><td class="typ">N : 1</td><td>Z jakiego przedmiotu?</td></tr>
+      <tr><th>kola + nauczyciele</th><td><code>kola.id_opiekuna = nauczyciele.id</code></td><td class="typ">N : 1</td><td>Kto prowadzi koło?</td></tr>
+      <tr><th>uczniowie_kola + uczniowie</th><td><code>uczniowie_kola.id_ucznia = uczniowie.id</code></td><td class="typ" rowspan="2">N : M<br><small style="font-weight:400;color:#475569">przez tabelę łączącą</small></td><td rowspan="2">Kto chodzi na jakie koło?<br><small style="color:#475569">potrzebne <b>oba</b> warunki — 3 tabele</small></td></tr>
+      <tr><th>uczniowie_kola + kola</th><td><code>uczniowie_kola.id_kola = kola.id</code></td></tr>
+    </tbody>
+  </table>
+
+  <!-- ================= 3. SZKIELET ================= -->
+  <h2 class="przelam"><span class="nr">3</span> Szkielet zapytania z JOIN</h2>
+  <p class="wstep">Wszystko, co już znasz, zostaje na swoim miejscu. Dochodzi jedna linijka (na żółto) — zaraz po <code>FROM</code>.</p>
+
+  <div class="szkielet">
+    <div class="wiersz"><span class="kw">SELECT u.imie, k.nazwa</span><span class="cm"><b>Które kolumny</b> — z dowolnej z łączonych tabel.<em>przed nazwą kolumny piszemy, z której tabeli jest: <code>u.imie</code></em></span></div>
+    <div class="wiersz"><span class="kw">FROM uczniowie AS u</span><span class="cm"><b>Pierwsza tabela</b> + krótki <b>alias</b> <code>u</code>.<em>alias = przezwisko tabeli, żeby nie pisać całej nazwy 20 razy</em></span></div>
+    <div class="wiersz"><span class="kw nowe">JOIN klasy AS k</span><span class="cm"><b>Druga tabela</b>, którą doklejamy.<em><code>JOIN</code> to to samo co <code>INNER JOIN</code></em></span></div>
+    <div class="wiersz"><span class="kw nowe">  ON u.id_klasy = k.id</span><span class="cm"><b>Po czym sklejać</b> — klucz obcy = klucz główny.<em>bez <code>ON</code> dostaniesz „każdy z każdym” — patrz stepper, krok bonus</em></span></div>
+    <div class="wiersz"><span class="kw">WHERE k.nazwa = '4TI'<span class="opc">nieobowiązkowe</span></span><span class="cm"><b>Filtr</b> — wolno używać kolumn <b>obu</b> tabel.<em>koniec z szukaniem numeru klasy!</em></span></div>
+    <div class="wiersz"><span class="kw">GROUP BY … HAVING …<span class="opc">nieobowiązkowe</span></span><span class="cm"><b>Grupowanie</b> działa jak dotąd — na sklejonej tabeli.</span></div>
+    <div class="wiersz"><span class="kw">ORDER BY … LIMIT …<span class="opc">nieobowiązkowe</span></span><span class="cm"><b>Sortowanie i limit</b> — bez zmian.</span></div>
+  </div>
+
+  <h3>A. Pierwsze kroki</h3>
+  <div class="siatka">
+
+    <div class="karta">
+      <h4>Dwie tabele, pełne nazwy</h4>
+      <p class="cel">Najbardziej „łopatologiczny” zapis — dobry na początek.</p>
+<pre>SELECT uczniowie.imie, uczniowie.nazwisko,
+       klasy.nazwa
+FROM uczniowie
+JOIN klasy ON uczniowie.id_klasy = klasy.id;</pre>
+      <div class="wynik"><b>Efekt:</b> 39 wierszy — każdy uczeń dokładnie raz, z nazwą klasy.</div>
+    </div>
+
+    <div class="karta">
+      <h4>Aliasy tabel <code>AS u</code></h4>
+      <p class="cel">To samo, krócej. <code>AS</code> można pominąć: <code>FROM uczniowie u</code>.</p>
+<pre>SELECT u.imie, u.nazwisko, k.nazwa
+FROM uczniowie AS u
+JOIN klasy AS k ON u.id_klasy = k.id;</pre>
+      <div class="wynik"><b>Uwaga:</b> po nadaniu aliasu używaj <b>tylko</b> aliasu — <code>uczniowie.imie</code> da błąd #1054.</div>
+    </div>
+
+    <div class="karta">
+      <h4>JOIN + <code>WHERE</code> po nazwie</h4>
+      <p class="cel">Filtrujesz po kolumnie z doklejonej tabeli — nie musisz znać numeru klasy.</p>
+<pre>SELECT u.imie, u.nazwisko
+FROM uczniowie u
+JOIN klasy k ON u.id_klasy = k.id
+WHERE k.nazwa = '4TI'
+ORDER BY u.nazwisko;</pre>
+      <div class="wynik"><b>Efekt:</b> 8 uczniów klasy 4TI, alfabetycznie.</div>
+    </div>
+
+    <div class="karta">
+      <h4>Te same nazwy kolumn → prefiks</h4>
+      <p class="cel"><code>id</code>, <code>imie</code>, <code>nazwa</code>, <code>email</code> są w kilku tabelach. Serwer nie zgadnie, o którą chodzi.</p>
+<pre>SELECT id, imie, nazwa
+FROM uczniowie u
+JOIN klasy k ON u.id_klasy = k.id;</pre>
+      <div class="pma-blad"><b>#1052</b> - Column 'id' in field list is ambiguous</div>
+<pre>SELECT u.id, u.imie, k.nazwa  -- ✅
+FROM uczniowie u
+JOIN klasy k ON u.id_klasy = k.id;</pre>
+    </div>
+
+    <div class="karta">
+      <h4>Kolumny o tej samej nazwie w wyniku → <code>AS</code></h4>
+      <p class="cel">Uczeń i wychowawca — obaj mają <code>imie</code> i <code>nazwisko</code>. Nadaj czytelne nagłówki.</p>
+<pre>SELECT CONCAT(u.imie,' ',u.nazwisko) AS Uczen,
+       CONCAT(n.imie,' ',n.nazwisko) AS Wychowawca
+FROM uczniowie u
+JOIN klasy k       ON u.id_klasy = k.id
+JOIN nauczyciele n ON k.id_wychowawcy = n.id;</pre>
+      <div class="wynik"><b>Efekt:</b> „Anna Kowalska” · „Joanna Pawlak”.</div>
+    </div>
+
+    <div class="karta">
+      <h4>Zapis „po staremu” — przecinek + <code>WHERE</code></h4>
+      <p class="cel">Spotkasz go w arkuszach egzaminu INF.03. Daje <b>ten sam wynik</b> co <code>JOIN … ON</code>.</p>
+<pre>SELECT uczniowie.imie, klasy.nazwa
+FROM uczniowie, klasy
+WHERE uczniowie.id_klasy = klasy.id;</pre>
+      <div class="wynik"><b>Na egzaminie wolno oba.</b> <code>JOIN … ON</code> jest czytelniejszy: łączenie osobno, filtr osobno.</div>
+    </div>
+
+  </div>
+
+  <h3>B. Trzy i więcej tabel</h3>
+  <div class="siatka">
+
+    <div class="karta">
+      <h4>Łańcuch: uczeń → klasa → wychowawca</h4>
+      <p class="cel">Każdy kolejny <code>JOIN</code> dokleja następną tabelę do tego, co już jest.</p>
+<pre>SELECT u.imie, u.nazwisko, k.nazwa,
+       n.nazwisko AS Wychowawca
+FROM uczniowie u
+JOIN klasy k       ON u.id_klasy = k.id
+JOIN nauczyciele n ON k.id_wychowawcy = n.id
+WHERE u.nazwisko = 'Kowalska';</pre>
+      <div class="wynik"><b>Efekt:</b> Anna · Kowalska · 4TL · Pawlak — „podróż po kluczach” w jednym zapytaniu.</div>
+    </div>
+
+    <div class="karta">
+      <h4>N:M przez tabelę łączącą</h4>
+      <p class="cel">Uczeń ↔ koło: tabela łącząca jest <b>w środku</b>, oba warunki <code>ON</code> prowadzą do niej.</p>
+<pre>SELECT u.imie, u.nazwisko
+FROM uczniowie u
+JOIN uczniowie_kola uk ON uk.id_ucznia = u.id
+JOIN kola ko           ON uk.id_kola = ko.id
+WHERE ko.nazwa = 'Koło robotyki'
+ORDER BY u.nazwisko;</pre>
+      <div class="wynik"><b>Efekt:</b> 11 osób chodzących na robotykę.</div>
+    </div>
+
+    <div class="karta">
+      <h4>Oceny z nazwą przedmiotu i uczniem</h4>
+      <p class="cel">Tabela <code>oceny</code> ma dwa klucze obce — każdy prowadzi gdzie indziej.</p>
+<pre>SELECT p.nazwa, o.ocena, o.waga, o.data_wystawienia
+FROM oceny o
+JOIN przedmioty p ON o.id_przedmiotu = p.id
+JOIN uczniowie u  ON o.id_ucznia = u.id
+WHERE u.nazwisko = 'Kowalska'
+ORDER BY p.nazwa;</pre>
+      <div class="wynik"><b>Efekt:</b> 9 ocen Anny, każda z nazwą przedmiotu.</div>
+    </div>
+
+  </div>
+
+  <h3>C. JOIN + GROUP BY — raporty „po ludzku”</h3>
+  <div class="siatka">
+
+    <div class="karta">
+      <h4>Ilu uczniów w klasie — z nazwą</h4>
+      <p class="cel">Grupujemy po kolumnie z doklejonej tabeli.</p>
+<pre>SELECT k.nazwa, COUNT(*) AS Uczniow
+FROM uczniowie u
+JOIN klasy k ON u.id_klasy = k.id
+GROUP BY k.nazwa
+ORDER BY Uczniow DESC;</pre>
+      <div class="wynik"><b>Efekt:</b> 4TI 8, 4TL 8, 2TI 8, 1TP 8, 5TM 7 — zamiast numerów 1–5.</div>
+    </div>
+
+    <div class="karta">
+      <h4>Średnia ocen z każdego przedmiotu</h4>
+<pre>SELECT p.nazwa, COUNT(*) AS Ocen,
+       ROUND(AVG(o.ocena), 2) AS Srednia
+FROM oceny o
+JOIN przedmioty p ON o.id_przedmiotu = p.id
+GROUP BY p.nazwa
+ORDER BY Srednia;</pre>
+      <div class="wynik"><b>Efekt:</b> 10 przedmiotów; najniżej logistyka i technologia (3.50).</div>
+    </div>
+
+    <div class="karta">
+      <h4>Grupuj po <code>id</code>, nie po nazwisku</h4>
+      <p class="cel">Dwóch Nowaków zlałoby się w jedną grupę. Grupuj po kluczu, a imię i nazwisko dopisz obok.</p>
+<pre>SELECT u.imie, u.nazwisko, COUNT(*) AS Kol
+FROM uczniowie u
+JOIN uczniowie_kola uk ON uk.id_ucznia = u.id
+GROUP BY u.id, u.imie, u.nazwisko
+HAVING Kol &gt;= 2
+ORDER BY Kol DESC;</pre>
+      <div class="wynik"><b>Efekt:</b> 17 uczniów chodzących na co najmniej 2 koła.</div>
+    </div>
+
+  </div>
+
+  <!-- ================= 4. LEFT JOIN ================= -->
+  <h2 class="przelam"><span class="nr">4</span> <code>LEFT JOIN</code> — gdy para nie istnieje</h2>
+  <p class="wstep">
+    Zwykły <code>JOIN</code> (<code>INNER</code>) pokazuje tylko wiersze, które <b>znalazły parę</b>. Reszta po cichu znika.
+    <code>LEFT JOIN</code> zachowuje <b>wszystkie wiersze tabeli z lewej</b> (tej z <code>FROM</code>), a brakującą parę wypełnia <code>NULL</code>-ami.
+  </p>
+
+  <div class="siatka">
+    <div class="karta">
+      <h4>INNER: koło szachowe znika</h4>
+<pre>SELECT ko.nazwa, COUNT(*) AS Uczniow
+FROM kola ko
+JOIN uczniowie_kola uk ON uk.id_kola = ko.id
+GROUP BY ko.nazwa;</pre>
+      <div class="wynik zly"><b>5 wierszy</b> — kół jest 6! Na szachowe nikt nie chodzi, więc nie miało pary.</div>
+    </div>
+
+    <div class="karta k-left">
+      <h4><code>LEFT JOIN</code> + <code>COUNT(kolumna)</code></h4>
+<pre>SELECT ko.nazwa,
+       COUNT(uk.id_ucznia) AS Uczniow
+FROM kola ko
+LEFT JOIN uczniowie_kola uk ON uk.id_kola = ko.id
+GROUP BY ko.nazwa;</pre>
+      <div class="wynik"><b>6 wierszy</b>, Koło szachowe → <b>0</b>.</div>
+      <div class="wynik zly"><b>Pułapka:</b> <code>COUNT(*)</code> dałby szachowemu <b>1</b> — liczy też wiersz z <code>NULL</code>-ami. Liczy się kolumnę z prawej tabeli.</div>
+    </div>
+
+    <div class="karta k-left">
+      <h4>„Kto nie ma pary?” → <code>IS NULL</code></h4>
+      <p class="cel">Najczęstsze zastosowanie: znaleźć wiersze <b>bez</b> powiązania.</p>
+<pre>-- nauczyciele, którzy nie są wychowawcami
+SELECT n.imie, n.nazwisko
+FROM nauczyciele n
+LEFT JOIN klasy k ON k.id_wychowawcy = n.id
+WHERE k.id IS NULL;</pre>
+      <div class="wynik"><b>Efekt:</b> 5 osób: Jabłoński, Król, Michalski, Sikora, Wróbel.</div>
+    </div>
+  </div>
+
+  <div class="zasada">
+    <h3>💡 Który JOIN?</h3>
+    <p><b>JOIN</b> (INNER) — „pokaż tylko pary”. <b>LEFT JOIN</b> — „pokaż <i>wszystkich</i> z lewej, a parę jeśli jest”.
+       Kolejność tabel ma znaczenie: przy <code>LEFT JOIN</code> „wszystkie” dotyczy tabeli z <code>FROM</code>.
+       Istnieje też <code>RIGHT JOIN</code> (lustrzane odbicie), ale zamiast niego wystarczy zamienić tabele miejscami.</p>
+  </div>
+
+  <!-- ================= 5. STEPPER JOIN ================= -->
+  <h2 class="przelam"><span class="nr">5</span> JOIN klatka po klatce</h2>
+  <p class="wstep">
+    6 uczniów i 5 klas. Patrz na <b>kolory</b>: uczeń dostaje kolor swojej klasy — tak serwer dobiera pary.
+    Klikaj <b>Dalej →</b> albo strzałki ← → na klawiaturze. Ostatni krok to bonus: co się stanie <b>bez</b> <code>ON</code>.
+  </p>
+
+  <div class="stepper" id="sj" tabindex="0">
+    <div class="st-gora">
+      <div class="st-kod" id="sjKod"></div>
+      <div class="st-panel">
+        <div class="st-liczniki">
+          <div class="st-licznik">wiersze: <span id="sjW">–</span></div>
+          <div class="st-licznik">kolumny: <span id="sjK">–</span></div>
+          <div class="st-licznik zielony" id="sjEtap">krok 0</div>
+        </div>
+        <div class="st-tytul" id="sjTytul"></div>
+        <p class="st-opis" id="sjOpis"></p>
+      </div>
+    </div>
+    <div class="st-nawigacja">
+      <button type="button" class="jasny" id="sjWstecz">← Wstecz</button>
+      <button type="button" id="sjDalej">Dalej →</button>
+      <button type="button" class="jasny" id="sjAuto">▶ Odtwórz</button>
+      <button type="button" class="jasny" id="sjReset">↺ Od nowa</button>
+      <div class="st-kropki" id="sjKropki"></div>
+    </div>
+    <div class="st-plansze" id="sjPlansze"></div>
+    <div class="st-stopka" id="sjStopka"></div>
+  </div>
+
+  <!-- ================= 6. STEPPER INNER vs LEFT ================= -->
+  <h2 class="przelam"><span class="nr">6</span> INNER czy LEFT? Stepper porównawczy</h2>
+  <p class="wstep">
+    10 nauczycieli, 5 klas. Pytanie: <b>kto jest wychowawcą której klasy?</b> Zobacz, co robi z tymi, którzy klasy nie mają, każdy rodzaj JOIN-a.
+  </p>
+
+  <div class="stepper" id="sl" tabindex="0">
+    <div class="st-gora">
+      <div class="st-kod" id="slKod"></div>
+      <div class="st-panel">
+        <div class="st-liczniki">
+          <div class="st-licznik">wiersze w wyniku: <span id="slW">–</span></div>
+          <div class="st-licznik zielony" id="slEtap">krok 0</div>
+        </div>
+        <div class="st-tytul" id="slTytul"></div>
+        <p class="st-opis" id="slOpis"></p>
+      </div>
+    </div>
+    <div class="st-nawigacja">
+      <button type="button" class="jasny" id="slWstecz">← Wstecz</button>
+      <button type="button" id="slDalej">Dalej →</button>
+      <button type="button" class="jasny" id="slAuto">▶ Odtwórz</button>
+      <button type="button" class="jasny" id="slReset">↺ Od nowa</button>
+      <div class="st-kropki" id="slKropki"></div>
+    </div>
+    <div class="st-plansze" id="slPlansze"></div>
+    <div class="st-stopka" id="slStopka"></div>
+  </div>
+
+<script>
+// Wspólny silnik obu stepperów: każdy krok opisuje, jakie tabele narysować.
+function zrobStepper(pref, KROKI, rysuj, odstep){
+  var root = document.getElementById(pref);
+  if(!root) return;
+  var plansze = document.getElementById(pref + 'Plansze');
+  var kropki = document.getElementById(pref + 'Kropki');
+  var btnD = document.getElementById(pref + 'Dalej');
+  var btnW = document.getElementById(pref + 'Wstecz');
+  var btnA = document.getElementById(pref + 'Auto');
+  var krok = 0, timer = null;
+  KROKI.forEach(function(k, i){
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = i; b.title = 'Krok ' + i;
+    b.setAttribute('aria-label', 'Krok ' + i);
+    b.addEventListener('click', function(){ stop(); idz(i); });
+    kropki.appendChild(b);
+  });
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function idz(i){
+    krok = Math.max(0, Math.min(KROKI.length - 1, i));
+    var k = KROKI[krok];
+    document.getElementById(pref + 'Kod').innerHTML = k.kod.map(function(l){
+      return '<span class="lin ' + l[1] + '">' + esc(l[0]) + '</span>';
+    }).join('');
+    plansze.innerHTML = rysuj(k);
+    document.getElementById(pref + 'Etap').textContent = 'krok ' + krok + ' / ' + (KROKI.length - 1);
+    document.getElementById(pref + 'Tytul').innerHTML = k.tytul;
+    document.getElementById(pref + 'Opis').innerHTML = k.opis;
+    document.getElementById(pref + 'Stopka').innerHTML = k.stopka;
+    if(k.liczniki) Object.keys(k.liczniki).forEach(function(id){ document.getElementById(id).textContent = k.liczniki[id]; });
+    Array.prototype.forEach.call(kropki.children, function(b, i2){
+      b.classList.toggle('akt', i2 === krok); b.classList.toggle('przed', i2 < krok);
+    });
+    btnW.disabled = krok === 0;
+    btnD.disabled = krok === KROKI.length - 1;
+    if(btnD.disabled) stop();
+  }
+  function stop(){ if(timer){ clearInterval(timer); timer = null; btnA.textContent = '▶ Odtwórz'; } }
+  btnD.addEventListener('click', function(){ stop(); idz(krok + 1); });
+  btnW.addEventListener('click', function(){ stop(); idz(krok - 1); });
+  document.getElementById(pref + 'Reset').addEventListener('click', function(){ stop(); idz(0); });
+  btnA.addEventListener('click', function(){
+    if(timer){ stop(); return; }
+    if(krok === KROKI.length - 1) idz(0);
+    btnA.textContent = '⏸ Pauza';
+    timer = setInterval(function(){ if(krok >= KROKI.length - 1){ stop(); return; } idz(krok + 1); }, odstep);
+  });
+  root.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight'){ e.preventDefault(); stop(); idz(krok + 1); }
+    if(e.key === 'ArrowLeft'){  e.preventDefault(); stop(); idz(krok - 1); }
+  });
+  idz(0);
+}
+
+// rysuje jedną tabelę: t = {tytul, opis, kol:[{n, cls}], w:[{d:[...], cls}], przygas, szeroki, nowy, ramka, drobna}
+function tabela(t){
+  var h = '<div class="st-blok' + (t.przygas ? ' przygaszony' : '') + (t.szeroki ? ' szeroki' : '') + (t.nowy ? ' nowy' : '') + '">' +
+    '<div class="tytul">' + t.tytul + (t.opis ? ' <small>' + t.opis + '</small>' : '') + '</div>' +
+    '<div class="st-tabela' + (t.ramka ? ' ' + t.ramka : '') + '"><table class="st-dane' + (t.drobna ? ' drobna' : '') + '"><thead><tr>';
+  t.kol.forEach(function(c){ h += '<th class="' + (c.cls || '') + '">' + c.n + '</th>'; });
+  h += '</tr></thead><tbody>';
+  t.w.forEach(function(r){
+    h += '<tr class="' + (r.cls || '') + '">';
+    r.d.forEach(function(v, i){
+      var nul = v === null;
+      var kc = (t.kol[i].td || '');
+      h += '<td class="' + (nul ? 'null ' : '') + kc + '">' + (nul ? 'NULL' : v) + '</td>';
+    });
+    h += '</tr>';
+  });
+  return h + '</tbody></table></div></div>';
+}
+
+/* ================= STEPPER 1: JOIN klatka po klatce ================= */
+(function(){
+  var U = [[1,'Anna','Kowalska',3],[2,'Bartosz','Nowak',1],[3,'Celina','Wójcik',3],
+           [4,'Damian','Zieliński',2],[7,'Gabriela','Dąbrowska',5],[8,'Hubert','Kamiński',1]];
+  var K = [[1,'4TI','informatyczny',112],[2,'5TM','mechaniczny',21],[3,'4TL','logistyczny',205],
+           [4,'2TI','informatyczny',114],[5,'1TP','programistyczny',210]];
+  function kl(id){ return id === 4 ? 'nic' : 'c' + id; }
+  function klasa(id){ for(var i = 0; i < K.length; i++) if(K[i][0] === id) return K[i]; }
+
+  var KU = ['u.id','u.imie','u.nazwisko','u.id_klasy'];
+  var KK = ['k.id','k.nazwa','k.profil','k.sala'];
+
+  function tU(o){
+    o = o || {};
+    return tabela({
+      tytul:'📋 uczniowie <code>AS u</code>', opis:'— 6 wierszy', przygas:o.przygas,
+      kol:KU.map(function(n){ return {n:n.slice(2), cls:(o.bad && n === 'u.id_klasy') ? 'badanie' : 'z-u', td:(o.bad && n === 'u.id_klasy') ? 'badanie' : ''}; }),
+      w:U.map(function(r){ return {d:r, cls:o.kolory ? kl(r[3]) : ''}; })
+    });
+  }
+  function tK(o){
+    o = o || {};
+    return tabela({
+      tytul:'📋 klasy <code>AS k</code>', opis:'— 5 wierszy', przygas:o.przygas,
+      kol:KK.map(function(n){ return {n:n.slice(2), cls:(o.bad && n === 'k.id') ? 'badanie' : 'z-k', td:(o.bad && n === 'k.id') ? 'badanie' : ''}; }),
+      w:K.map(function(r){ return {d:r, cls:o.kolory ? kl(r[0]) : ''}; })
+    });
+  }
+  // wynik sklejenia: o.filtr (WHERE), o.wybrane (SELECT), o.sort (ORDER BY)
+  function tW(o){
+    var wiersze = U.map(function(u){ return {u:u, k:klasa(u[3])}; });
+    if(o.sort) wiersze = wiersze.slice().sort(function(a, b){
+      return a.k[1] === b.k[1] ? a.u[2].localeCompare(b.u[2], 'pl') : a.k[1].localeCompare(b.k[1]);
+    });
+    var wsz = KU.concat(KK);
+    var kol = o.wybrane && o.tylko ? ['u.imie','u.nazwisko','k.nazwa'] : wsz;
+    return tabela({
+      tytul:o.tytul || '🧩 wynik sklejenia', opis:o.opis || '', szeroki:true, nowy:o.nowy, ramka:o.ramka,
+      kol:kol.map(function(n){
+        var zle = o.wybrane && !o.tylko && ['u.imie','u.nazwisko','k.nazwa'].indexOf(n) === -1;
+        var nazwa = (o.tylko && n === 'k.nazwa') ? 'klasa' : n;
+        return {n:nazwa, cls:zle ? 'kol-zle' : (n[0] === 'u' ? 'z-u' : 'z-k'), td:zle ? 'kol-zle' : ''};
+      }),
+      w:wiersze.filter(function(p){ return !(o.filtrUkryj && p.k[1][0] !== '4'); }).map(function(p){
+        var d = p.u.concat(p.k);
+        if(o.tylko) d = [p.u[1], p.u[2], p.k[1]];
+        var cls = kl(p.u[3]);
+        if(o.filtr && p.k[1][0] !== '4') cls = 'zle';
+        if(o.koniec) cls = 'wynik';
+        return {d:d, cls:cls};
+      })
+    });
+  }
+  // iloczyn kartezjański (bonus)
+  function tX(){
+    var w = [];
+    U.forEach(function(u){ K.forEach(function(k){
+      w.push({d:[u[1], u[2], u[3], k[0], k[1]], cls:u[3] === k[0] ? 'trafiony' : 'chybiony'});
+    }); });
+    return tabela({
+      tytul:'💥 FROM uczniowie, klasy — bez warunku', opis:'— każdy uczeń z każdą klasą', szeroki:true, drobna:true, ramka:'bonus',
+      kol:[{n:'u.imie',cls:'z-u'},{n:'u.nazwisko',cls:'z-u'},{n:'u.id_klasy',cls:'z-u'},{n:'k.id',cls:'z-k'},{n:'k.nazwa',cls:'z-k'}], w:w
+    });
+  }
+
+  var Q = [
+    'SELECT u.imie, u.nazwisko, k.nazwa AS klasa',
+    'FROM uczniowie AS u',
+    'JOIN klasy AS k ON u.id_klasy = k.id',
+    "WHERE k.nazwa LIKE '4%'",
+    'ORDER BY k.nazwa, u.nazwisko;'
+  ];
+  // akt = linie wykonywane teraz, gotowe = linie już wykonane (kolejność wykonywania ≠ kolejność pisania)
+  function kod(akt, gotowe){
+    gotowe = gotowe || [];
+    return Q.map(function(l, i){ return [l, akt.indexOf(i) > -1 ? 'akt' : (gotowe.indexOf(i) > -1 ? 'zrobione' : '')]; });
+  }
+
+  var KROKI = [
+    { kod:kod([]), liczniki:{sjW:'6 + 5', sjK:'4 + 4'},
+      tytul:'Dwie osobne tabele',
+      opis:'Uczniowie mają tylko <b>numer</b> klasy. Nazwa klasy leży w drugiej tabeli. Zadanie: pokaż uczniów <b>czwartych klas</b> z nazwą klasy.',
+      stopka:'Kolejność <b>wykonywania</b>: <code>FROM</code> → <code>JOIN … ON</code> → <code>WHERE</code> → <code>SELECT</code> → <code>ORDER BY</code>.',
+      plansze:function(){ return tU() + tK(); } },
+    { kod:kod([1]), liczniki:{sjW:6, sjK:4},
+      tytul:'<code>FROM uczniowie AS u</code> — bierzemy pierwszą tabelę',
+      opis:'Serwer zaczyna od tabeli z <code>FROM</code>. Alias <b>u</b> to od teraz jej krótka nazwa: <code>u.imie</code> = „imie z tabeli uczniowie”.',
+      stopka:'Aliasy są tylko na czas tego zapytania — w bazie nic się nie zmienia.',
+      plansze:function(){ return tU() + tK({przygas:true}); } },
+    { kod:kod([2],[1]), liczniki:{sjW:'6 + 5', sjK:'4 + 4'},
+      tytul:'<code>ON u.id_klasy = k.id</code> — dobieranie par',
+      opis:'Dla każdego ucznia serwer szuka w <b>klasy</b> wiersza, w którym <code>k.id</code> równa się jego <code>u.id_klasy</code>. Ten sam kolor = para. Klasa <b>2TI</b> (szara) nie ma tu żadnego ucznia — w zwykłym JOIN-ie po prostu się nie pojawi.',
+      stopka:'Warunek <code>ON</code> to prawie zawsze: <b>klucz obcy = klucz główny</b> (ściąga w części 2).',
+      plansze:function(){ return tU({kolory:true, bad:true}) + tK({kolory:true, bad:true}); } },
+    { kod:kod([2],[1]), liczniki:{sjW:6, sjK:8},
+      tytul:'🧩 Sklejone: 6 wierszy × 8 kolumn',
+      opis:'Każdy uczeń dostał <b>doklejony</b> wiersz swojej klasy. Teraz to jedna szeroka tabela: 4 kolumny ucznia + 4 kolumny klasy. Zauważ: „4TL” stoi tu dwa razy — <b>w wyniku</b> powtórzenia są normalne, w bazie zapisano je raz.',
+      stopka:'Ta tymczasowa tabela istnieje tylko w trakcie wykonywania zapytania. Dalsze klauzule pracują już na niej.',
+      plansze:function(){ return tW({nowy:true}); } },
+    { kod:kod([3],[1,2]), liczniki:{sjW:4, sjK:8},
+      tytul:"<code>WHERE k.nazwa LIKE '4%'</code> — filtr po kolumnie drugiej tabeli",
+      opis:'Odpadają Damian (5TM) i Gabriela (1TP). W <code>WHERE</code> wolno używać kolumn z <b>obu</b> tabel — nie trzeba już znać numeru klasy.',
+      stopka:'Bez JOIN-a musielibyśmy najpierw sprawdzić, że czwarte klasy mają numery 1 i 3, i pisać <code>WHERE id_klasy IN (1, 3)</code>.',
+      plansze:function(){ return tW({filtr:true}); } },
+    { kod:kod([0],[1,2,3]), liczniki:{sjW:4, sjK:3},
+      tytul:'<code>SELECT</code> — zostawiamy 3 kolumny',
+      opis:'Z ośmiu kolumn zostają <code>u.imie</code>, <code>u.nazwisko</code> i <code>k.nazwa</code>. Alias <code>AS klasa</code> zmienia tylko nagłówek.',
+      stopka:'Kolumny <code>u.id_klasy</code> i <code>k.id</code> były potrzebne do sklejenia, ale w wyniku nie są nikomu potrzebne.',
+      plansze:function(){ return tW({filtrUkryj:true, wybrane:true}); } },
+    { kod:kod([4],[0,1,2,3]), liczniki:{sjW:4, sjK:3},
+      tytul:'<code>ORDER BY k.nazwa, u.nazwisko</code>',
+      opis:'Najpierw po klasie (4TI przed 4TL), w środku klasy — po nazwisku.',
+      stopka:'Sortować też wolno po kolumnach z obu tabel.',
+      plansze:function(){ return tW({filtrUkryj:true, wybrane:true, tylko:true, sort:true}); } },
+    { kod:kod([],[0,1,2,3,4]), liczniki:{sjW:4, sjK:3},
+      tytul:'✅ Wynik', opis:'4 wiersze, 3 kolumny — uczniowie czwartych klas z <b>nazwą</b> klasy, jednym zapytaniem.',
+      stopka:'Tabele w bazie są nietknięte — <code>SELECT</code> z <code>JOIN</code>-em niczego nie zmienia, tylko czyta.',
+      plansze:function(){ return tW({filtrUkryj:true, wybrane:true, tylko:true, sort:true, koniec:true, ramka:'gotowe', tytul:'✅ wynik zapytania'}); } },
+    { kod:[['-- ❌ ktoś zapomniał warunku łączenia:', 'kom'], ['SELECT u.imie, u.nazwisko, k.nazwa', 'bonus'], ['FROM uczniowie u, klasy k;', 'bonus'], ['-- (to samo daje JOIN bez ON)', 'kom']],
+      liczniki:{sjW:30, sjK:5},
+      tytul:'🧨 Bonus: zapomniane <code>ON</code> → „każdy z każdym”',
+      opis:'Bez warunku serwer łączy <b>każdego</b> ucznia z <b>każdą</b> klasą: 6 × 5 = <b>30 wierszy</b> (na całej bazie: 39 × 5 = 195). To <b>iloczyn kartezjański</b>. Zielone wiersze to te, które przepuściłby warunek <code>ON</code> — reszta to śmieci.',
+      stopka:'Dziwnie dużo wierszy i każdy uczeń w każdej klasie? Sprawdź, czy nie brakuje <code>ON</code> (albo <code>WHERE</code> w zapisie z przecinkiem).',
+      plansze:function(){ return tX(); } }
+  ];
+  zrobStepper('sj', KROKI, function(k){ return k.plansze(); }, 3400);
+})();
+
+/* ================= STEPPER 2: INNER vs LEFT ================= */
+(function(){
+  // posortowane po nazwisku
+  var N = [[8,'Monika','Adamczyk'],[9,'Rafał','Górski'],[7,'Paweł','Jabłoński'],[3,'Tomasz','Kaczmarek'],[6,'Beata','Król'],
+           [5,'Krzysztof','Michalski'],[1,'Marek','Nowicki'],[4,'Joanna','Pawlak'],[10,'Ewelina','Sikora'],[2,'Agnieszka','Wróbel']];
+  var K = [[1,'4TI',3],[2,'5TM',9],[3,'4TL',4],[4,'2TI',1],[5,'1TP',8]];
+  function klasaN(nid){ for(var i = 0; i < K.length; i++) if(K[i][2] === nid) return K[i]; return null; }
+
+  function tN(znaczPary){
+    return tabela({
+      tytul:'📋 nauczyciele <code>n</code>', opis:'— lewa tabela (z FROM)',
+      kol:[{n:'id',cls:'z-u'},{n:'imie',cls:'z-u'},{n:'nazwisko',cls:'z-u'}],
+      w:N.map(function(r){ var k = klasaN(r[0]); return {d:r, cls:znaczPary ? (k ? 'trafiony' : znaczPary) : ''}; })
+    });
+  }
+  function tK(){
+    return tabela({
+      tytul:'📋 klasy <code>k</code>', opis:'— prawa tabela',
+      kol:[{n:'id',cls:'z-k'},{n:'nazwa',cls:'z-k'},{n:'id_wychowawcy',cls:'z-k'}],
+      w:K.map(function(r){ return {d:r}; })
+    });
+  }
+  function tWynik(tryb){
+    var w = [];
+    N.forEach(function(n){
+      var k = klasaN(n[0]);
+      if(tryb === 'inner' && !k) return;
+      if(tryb === 'brak' && k) return;
+      w.push({d:[n[1], n[2], k ? k[1] : null], cls:tryb === 'brak' ? 'wynik' : (k ? '' : 'chybiony')});
+    });
+    return tabela({
+      tytul:'🧩 wynik', opis:'— ' + w.length + ' wierszy', nowy:true, ramka:tryb === 'brak' ? 'gotowe' : '',
+      kol:[{n:'n.imie',cls:'z-u'},{n:'n.nazwisko',cls:'z-u'},{n:'k.nazwa',cls:'z-k'}], w:w
+    });
+  }
+
+  var KROKI = [
+    { kod:[['-- Pytanie: każdy nauczyciel', 'kom'], ['-- i klasa, której jest wychowawcą', 'kom']], liczniki:{slW:'–'},
+      tytul:'10 nauczycieli, 5 klas', opis:'Wychowawców jest tylko pięciu. Co zrobić z pozostałymi pięcioma nauczycielami?',
+      stopka:'Warunek łączenia: <code>k.id_wychowawcy = n.id</code>.',
+      plansze:function(){ return tN() + tK(); } },
+    { kod:[['SELECT n.imie, n.nazwisko, k.nazwa', 'akt'], ['FROM nauczyciele n', 'akt'], ['JOIN klasy k ON k.id_wychowawcy = n.id;', 'akt']], liczniki:{slW:5},
+      tytul:'<code>JOIN</code> (INNER) — tylko pary',
+      opis:'Zielono: nauczyciele, którzy znaleźli parę. Czerwono: <b>znikają z wyniku</b> — nie są wychowawcami, więc nie ma dla nich wiersza w <b>klasy</b>. Wynik: <b>5 wierszy</b>.',
+      stopka:'INNER JOIN to dobry wybór, gdy interesują Cię <b>tylko</b> istniejące powiązania.',
+      plansze:function(){ return tN('zle') + tWynik('inner'); } },
+    { kod:[['SELECT n.imie, n.nazwisko, k.nazwa', 'akt'], ['FROM nauczyciele n', 'akt'], ['LEFT JOIN klasy k ON k.id_wychowawcy = n.id;', 'akt']], liczniki:{slW:10},
+      tytul:'<code>LEFT JOIN</code> — wszyscy z lewej',
+      opis:'Każdy nauczyciel jest w wyniku. Kto nie ma pary, dostaje w kolumnach klasy <b>NULL</b>. Wynik: <b>10 wierszy</b> — tyle, ile wierszy ma lewa tabela.',
+      stopka:'„LEFT” = tabela zapisana <b>po lewej</b> stronie słowa JOIN, czyli ta z <code>FROM</code>.',
+      plansze:function(){ return tN('chybiony') + tWynik('left'); } },
+    { kod:[['SELECT n.imie, n.nazwisko', 'zrobione'], ['FROM nauczyciele n', 'zrobione'], ['LEFT JOIN klasy k ON k.id_wychowawcy = n.id', 'zrobione'], ['WHERE k.id IS NULL;', 'akt']], liczniki:{slW:5},
+      tytul:'✅ <code>LEFT JOIN … WHERE … IS NULL</code> — „kto nie ma pary?”',
+      opis:'Zostawiamy tylko wiersze z <b>NULL</b>-em po prawej. Odpowiedź na pytanie: <b>którzy nauczyciele nie są wychowawcami?</b> Jabłoński, Król, Michalski, Sikora, Wróbel.',
+      stopka:'Ten wzór znajdzie też: koła bez uczniów, uczniów bez kół, nauczycieli bez kół, przedmioty bez ocen…',
+      plansze:function(){ return tN('chybiony') + tWynik('brak'); } },
+    { kod:[['-- A gdyby zamienić tabele miejscami?', 'kom'], ['SELECT k.nazwa, n.nazwisko', 'akt'], ['FROM klasy k', 'akt'], ['LEFT JOIN nauczyciele n ON k.id_wychowawcy = n.id;', 'akt']], liczniki:{slW:5},
+      tytul:'Kolejność tabel ma znaczenie',
+      opis:'Teraz po lewej są <b>klasy</b>. Każda klasa ma wychowawcę, więc NULL-i nie ma i wynik to <b>5 wierszy</b> — tak samo jak INNER. Pięciu nauczycieli bez klasy w ogóle się nie pojawia.',
+      stopka:'Zasada: przy <code>LEFT JOIN</code> w <code>FROM</code> stawiasz tabelę, z której chcesz zobaczyć <b>wszystkie</b> wiersze.',
+      plansze:function(){
+        return tK() + tabela({tytul:'🧩 wynik', opis:'— 5 wierszy', nowy:true,
+          kol:[{n:'k.nazwa',cls:'z-k'},{n:'n.nazwisko',cls:'z-u'}],
+          w:[{d:['4TI','Kaczmarek']},{d:['5TM','Górski']},{d:['4TL','Pawlak']},{d:['2TI','Nowicki']},{d:['1TP','Adamczyk']}]});
+      } }
+  ];
+  zrobStepper('sl', KROKI, function(k){ return k.plansze(); }, 3800);
+})();
+</script>
+
+  <!-- ================= 7. BŁĘDY ================= -->
+  <div class="uwaga">
+    <h3>⚠️ Najczęstsze błędy z JOIN</h3>
+    <ul>
+      <li><b>#1052 … is ambiguous</b> — kolumna o tej nazwie jest w obu tabelach (<code>id</code>, <code>imie</code>, <code>nazwa</code>). Dopisz prefiks: <code>u.id</code>.
+        <i>(Nowsze MariaDB piszą „in SELECT”, XAMPP — „in field list”; znaczy to samo.)</i></li>
+      <li><b>#1054 Unknown column 'uczniowie.id'</b> — tabela ma alias <code>u</code>, a Ty piszesz pełną nazwę. Po nadaniu aliasu używaj tylko aliasu.</li>
+      <li><b>Brak <code>ON</code></b> — zapytanie działa, ale zwraca „każdy z każdym” (195 wierszy zamiast 39).</li>
+      <li><b>Złe kolumny w <code>ON</code></b> — <code>ON u.id = k.id</code> też działa i zwraca 5 wierszy… zupełnie bez sensu (Anna „trafia” do 4TI, bo ma <code>id = 1</code>). Łącz <b>klucz obcy z kluczem głównym</b>, nie <code>id</code> z <code>id</code>.</li>
+      <li><b>Zgubione wiersze</b> — zwykły <code>JOIN</code> pomija wiersze bez pary (koło szachowe). Jeśli mają być wszystkie — <code>LEFT JOIN</code>.</li>
+      <li><b><code>COUNT(*)</code> przy <code>LEFT JOIN</code></b> — liczy też wiersz z NULL-ami. Licz kolumnę z prawej tabeli: <code>COUNT(uk.id_ucznia)</code>.</li>
+      <li><b>„Puchnące” liczby</b> — po doklejeniu ocen każdy uczeń występuje tyle razy, ile ma ocen. Liczysz uczniów? <code>COUNT(DISTINCT u.id)</code>.</li>
+    </ul>
+  </div>
+
+  <div class="stop">
+    <b>Gotowe!</b><br>
+    Od teraz każda nazwa zamiast numeru to jeden <code>JOIN</code> więcej. Ćwiczenia: <b>Zestaw 4 — JOIN</b>.
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Postaci normalne — ściąga</title>
+<style>
+  :root{
+    --tlo:#f4f6fb;
+    --karta:#ffffff;
+    --granat:#1e3a8a;
+    --niebieski:#2563eb;
+    --jasny:#dbeafe;
+    --zielony:#15803d;
+    --jasnyziel:#dcfce7;
+    --pomarancz:#c2410c;
+    --jasnypom:#ffedd5;
+    --fiolet:#6d28d9;
+    --jasnyfiol:#ede9fe;
+    --czerwony:#b91c1c;
+    --jasnyczer:#fee2e2;
+    --szary:#475569;
+    --linia:#cbd5e1;
+    --p0:#991b1b; --p1:#c2410c; --p2:#a16207; --p3:#15803d;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:28px 18px 60px;
+    background:var(--tlo); color:#0f172a;
+    font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    font-size:17px; line-height:1.5;
+  }
+  .strona{max-width:1180px;margin:0 auto}
+  h1{font-size:2.6rem;text-align:center;margin:0 0 6px;color:var(--granat);letter-spacing:-.5px}
+  .podtytul{text-align:center;color:var(--szary);font-size:1.15rem;margin:0 0 34px}
+  h2{font-size:1.9rem;color:var(--granat);margin:46px 0 6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  h2 .nr{
+    background:var(--granat);color:#fff;border-radius:12px;width:46px;height:46px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:1.4rem;flex:none;
+  }
+  h2 .lekcja{font-size:.85rem;font-weight:700;color:var(--szary);background:#e2e8f0;border-radius:999px;padding:3px 12px}
+  h3{font-size:1.3rem;color:var(--granat);margin:26px 0 10px}
+  .wstep{color:var(--szary);margin:0 0 18px;font-size:1.05rem}
+  code{font-family:"SF Mono",Menlo,Consolas,monospace}
+
+  /* ---------- TABELE ---------- */
+  .zoom{background:var(--karta);border:2px solid var(--linia);border-radius:16px;padding:16px 18px;margin-top:14px;overflow-x:auto}
+  table.dane{border-collapse:collapse;width:100%;font-size:.98rem}
+  table.dane th,table.dane td{border:1px solid var(--linia);padding:6px 10px;text-align:left;white-space:nowrap}
+  table.dane thead th{background:var(--jasny);color:var(--granat)}
+  table.dane th.kol-pk{background:var(--jasnypom);color:var(--pomarancz)}
+  table.dane th.kol-fk{background:var(--jasnyfiol);color:var(--fiolet)}
+  table.dane td.zle{background:var(--jasnyczer);color:var(--czerwony);font-weight:700}
+  table.dane td.zmiana{background:#fef9c3;font-weight:700}
+  table.dane td.znika{background:#f1f5f9;color:#94a3b8;text-decoration:line-through}
+  table.dane tr.brak td{border-style:dashed;color:#94a3b8;font-style:italic;background:#fff}
+
+  /* ---------- ANOMALIE ---------- */
+  .anomalie{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px;margin-top:16px}
+  .anomalia{background:#fff;border:3px solid var(--linia);border-radius:16px;padding:14px 16px}
+  .anomalia h4{margin:0 0 4px;font-size:1.2rem}
+  .anomalia p{margin:0 0 8px;font-size:.98rem}
+  .anomalia .tab{overflow-x:auto}
+  .anomalia table.dane{font-size:.88rem}
+  .anomalia table.dane th,.anomalia table.dane td{padding:4px 7px}
+  .anomalia .skutek{margin-top:8px;border-radius:8px;padding:6px 10px;font-size:.93rem;background:var(--jasnyczer);color:#7f1d1d}
+  .a-mod{border-color:#ca8a04} .a-mod h4{color:#a16207}
+  .a-wst{border-color:var(--niebieski)} .a-wst h4{color:var(--granat)}
+  .a-usu{border-color:var(--czerwony)} .a-usu h4{color:var(--czerwony)}
+
+  /* ---------- KARTY ---------- */
+  .siatka{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px;margin-top:16px}
+  .karta{background:var(--karta);border:2px solid var(--linia);border-radius:14px;padding:14px 16px 16px}
+  .karta h4{margin:0 0 6px;font-size:1.15rem;color:var(--granat)}
+  .karta p{margin:0 0 8px}
+  .karta ul{margin:4px 0 8px;padding-left:22px}
+  .karta li{margin:3px 0}
+
+  .zasada{margin-top:16px;background:var(--jasnyziel);border:2px solid var(--zielony);border-radius:14px;padding:14px 18px}
+  .zasada h3{margin:0 0 6px;color:#14532d}
+  .zasada p{margin:0;font-size:1.05rem}
+  .uwaga{margin-top:26px;background:#fff7ed;border:2px solid var(--pomarancz);border-radius:14px;padding:14px 18px}
+  .uwaga h3{margin:0 0 8px;color:var(--pomarancz)}
+  .uwaga ul{margin:0;padding-left:22px}
+  .uwaga li{margin:6px 0}
+  .uwaga code{background:#ffedd5;padding:1px 6px;border-radius:5px}
+  .chetni{margin-top:26px;background:var(--jasnyfiol);border:2px dashed var(--fiolet);border-radius:14px;padding:14px 18px}
+  .chetni h3{margin:0 0 8px;color:var(--fiolet)}
+  .chetni ul{margin:0;padding-left:22px}
+  .chetni li{margin:6px 0}
+  .chetni code{background:#fff;padding:1px 6px;border-radius:5px}
+
+  /* ---------- ZALEŻNOŚCI ---------- */
+  .strzalka-duza{
+    display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;
+    background:#fff;border:2px solid var(--linia);border-radius:16px;padding:18px;margin-top:14px;
+    font-size:1.25rem;
+  }
+  .strzalka-duza .pole{background:var(--jasnypom);color:var(--pomarancz);border-radius:12px;padding:8px 18px;font-weight:800}
+  .strzalka-duza .pole.b{background:var(--jasny);color:var(--granat)}
+  .strzalka-duza .grot{font-size:2.2rem;color:var(--zielony);font-weight:800}
+  .strzalka-duza .czyt{flex-basis:100%;text-align:center;color:var(--szary);font-size:1.05rem}
+  .zal-lista{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px;margin-top:14px}
+  details.zal{background:#fff;border:2px solid var(--linia);border-radius:12px;padding:8px 14px}
+  details.zal summary{cursor:pointer;font-family:"SF Mono",Menlo,Consolas,monospace;font-weight:700;font-size:1.02rem;color:var(--granat)}
+  details.zal summary::marker{color:var(--szary)}
+  details.zal[open]{border-color:var(--niebieski)}
+  details.zal .odp{margin-top:6px;font-size:.95rem}
+  details.zal .tak{color:var(--zielony);font-weight:700}
+  details.zal .nie{color:var(--czerwony);font-weight:700}
+  .rodzaje{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:16px}
+  .rodzaj{background:#fff;border:3px solid var(--linia);border-radius:14px;padding:12px 14px}
+  .rodzaj h4{margin:0 0 4px;font-size:1.1rem}
+  .rodzaj p{margin:0 0 6px;font-size:.96rem}
+  .rodzaj .wzor{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:.92rem;background:#f8fafc;border-radius:8px;padding:6px 10px}
+  .r-pel{border-color:var(--zielony)} .r-pel h4{color:var(--zielony)}
+  .r-cze{border-color:var(--czerwony)} .r-cze h4{color:var(--czerwony)}
+  .r-prz{border-color:var(--pomarancz)} .r-prz h4{color:var(--pomarancz)}
+
+  /* ---------- POSTACI ---------- */
+  .postaci{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-top:16px}
+  .postac{background:#fff;border:3px solid var(--linia);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+  .postac .glowa{padding:10px 16px;color:#fff;display:flex;align-items:baseline;gap:12px}
+  .postac .glowa b{font-size:1.7rem}
+  .postac .glowa span{font-size:1rem;opacity:.95}
+  .postac .tresc{padding:12px 16px 14px;display:flex;flex-direction:column;gap:10px}
+  .postac .oficjalnie{background:#f8fafc;border-left:5px solid var(--szary);border-radius:0 8px 8px 0;padding:8px 12px;font-size:.95rem}
+  .postac .oficjalnie small{display:block;color:var(--szary);font-weight:700;font-size:.78rem;letter-spacing:.4px;text-transform:uppercase}
+  .postac .ludzku{font-size:1.08rem;font-weight:600}
+  .postac .ludzku small{display:block;color:var(--szary);font-weight:700;font-size:.78rem;letter-spacing:.4px;text-transform:uppercase}
+  .postac .naprawa{background:var(--jasnyziel);border-radius:8px;padding:6px 10px;font-size:.93rem;color:#14532d}
+  .postac table.dane{font-size:.86rem}
+  .postac table.dane th,.postac table.dane td{padding:4px 7px}
+  .ps1{border-color:var(--p1)} .ps1 .glowa{background:var(--p1)}
+  .ps2{border-color:var(--p2)} .ps2 .glowa{background:var(--p2)}
+  .ps3{border-color:var(--p3)} .ps3 .glowa{background:var(--p3)}
+  .mnemo{
+    margin-top:16px;text-align:center;background:var(--granat);color:#fff;border-radius:16px;padding:16px;
+    font-size:1.3rem;font-weight:700;
+  }
+  .mnemo span{display:inline-block;margin:0 10px;padding:4px 14px;border-radius:10px}
+  .mnemo .m1{background:var(--p1)} .mnemo .m2{background:var(--p2)} .mnemo .m3{background:var(--p3)}
+  .mnemo small{display:block;font-weight:400;font-size:.95rem;opacity:.85;margin-top:8px}
+
+  /* ---------- ALGORYTM ---------- */
+  .algorytm{display:flex;flex-direction:column;gap:0;margin-top:14px}
+  .alg-krok{
+    display:grid;grid-template-columns:44px 1fr 270px;gap:12px;align-items:center;
+    background:#fff;border:2px solid var(--linia);border-radius:12px;padding:10px 12px;
+  }
+  .alg-krok .nrk{width:34px;height:34px;border-radius:50%;background:var(--granat);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .alg-krok .pyt{font-weight:600}
+  .alg-krok .pyt small{display:block;font-weight:400;color:var(--szary)}
+  .alg-krok .werdykt{border-radius:8px;padding:6px 10px;font-size:.92rem;font-weight:700;color:#fff}
+  .alg-dalej{text-align:left;padding:2px 0 2px 26px;color:var(--szary);font-size:.92rem;font-weight:600}
+  .s0{background:var(--p0)} .s1{background:var(--p1)} .s2{background:var(--p2)} .s3{background:var(--p3)}
+
+  /* ---------- STEPPER ---------- */
+  .stepper{background:var(--karta);border:3px solid var(--granat);border-radius:18px;padding:16px 18px 20px;margin-top:16px}
+  .stepper:focus{outline:3px solid var(--niebieski);outline-offset:3px}
+  .st-gora{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch}
+  .st-panel{flex:1 1 100%;display:flex;flex-direction:column;gap:8px}
+  .st-liczniki{display:flex;gap:10px;flex-wrap:wrap}
+  .st-licznik{background:var(--jasny);color:var(--granat);border-radius:10px;padding:6px 12px;font-size:.95rem;font-weight:700}
+  .st-licznik span{font-size:1.2rem;display:inline-block;min-width:22px}
+  .st-licznik.postac-0{background:var(--p0);color:#fff}
+  .st-licznik.postac-1{background:var(--p1);color:#fff}
+  .st-licznik.postac-2{background:var(--p2);color:#fff}
+  .st-licznik.postac-3{background:var(--p3);color:#fff}
+  .st-licznik.zolty{background:#fef9c3;color:#713f12}
+  .st-licznik.zielony{background:var(--jasnyziel);color:#14532d}
+  .st-tytul{font-size:1.3rem;font-weight:700;color:var(--granat)}
+  .st-tytul code{background:var(--jasny);padding:1px 8px;border-radius:6px;font-size:1.05rem}
+  .st-opis{margin:0;font-size:1.02rem;color:var(--szary)}
+  .st-opis b{color:#0f172a}
+  .st-nawigacja{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 10px;padding-top:12px;border-top:2px solid var(--linia)}
+  .st-nawigacja button{
+    font:inherit;font-weight:700;cursor:pointer;border-radius:10px;padding:9px 16px;
+    border:2px solid var(--granat);background:var(--granat);color:#fff;transition:filter .15s,opacity .15s;
+  }
+  .st-nawigacja button.jasny{background:#fff;color:var(--granat)}
+  .st-nawigacja button:hover:not(:disabled){filter:brightness(1.15)}
+  .st-nawigacja button:disabled{opacity:.35;cursor:not-allowed}
+  .st-kropki{display:flex;gap:7px;margin-left:auto;flex-wrap:wrap}
+  .st-kropki button{width:30px;height:30px;padding:0;border-radius:50%;border:2px solid var(--linia);background:#fff;color:var(--szary);font-size:.85rem;font-weight:700}
+  .st-kropki button.akt{background:var(--niebieski);border-color:var(--niebieski);color:#fff}
+  .st-kropki button.przed{background:var(--jasny);border-color:var(--niebieski);color:var(--granat)}
+
+  .st-plansze{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+  .st-blok{flex:1 1 auto;min-width:220px;max-width:100%}
+  .st-blok.nowy{animation:wjazd .6s ease-out}
+  @keyframes wjazd{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .st-blok > .tytul{font-weight:700;color:var(--granat);margin-bottom:4px;font-size:1.02rem}
+  .st-blok > .tytul small{color:var(--szary);font-weight:400}
+  .st-tabela{overflow-x:auto;border-radius:10px;transition:box-shadow .3s}
+  .st-tabela.gotowe{box-shadow:0 0 0 3px var(--zielony)}
+  .rys{position:relative;display:inline-block;min-width:100%}
+  .rys svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+  table.st-dane{border-collapse:collapse;width:100%;font-size:.93rem}
+  table.st-dane th,table.st-dane td{border:1px solid var(--linia);padding:4px 9px;text-align:left;white-space:nowrap;transition:background-color .35s}
+  table.st-dane thead th{background:var(--jasny);color:var(--granat)}
+  table.st-dane thead th.kol-pk{background:var(--jasnypom);color:var(--pomarancz)}
+  table.st-dane thead th.kol-fk{background:var(--jasnyfiol);color:var(--fiolet)}
+  table.st-dane thead th.kol-zle{background:var(--jasnyczer);color:var(--czerwony)}
+  table.st-dane td.kol-zle{background:#fff1f2}
+  table.st-dane td.zle{background:var(--jasnyczer);color:var(--czerwony);font-weight:700}
+  table.st-dane td.zmiana{background:#fde68a;font-weight:700;color:#713f12}
+  .legenda-strz{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.93rem;color:var(--szary)}
+  .legenda-strz span b{display:inline-block;width:26px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}
+  .st-stopka{margin-top:12px;background:var(--jasny);border-radius:10px;padding:8px 12px;font-size:1rem;color:var(--granat)}
+  .st-stopka code{background:#fff;padding:1px 6px;border-radius:5px}
+
+  /* ---------- QUIZ ---------- */
+  .quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:16px;margin-top:16px}
+  .q{background:#fff;border:2px solid var(--linia);border-radius:16px;padding:14px 16px}
+  .q h4{margin:0 0 4px;font-size:1.1rem;color:var(--granat);display:flex;gap:10px;align-items:center}
+  .q h4 .qnr{background:var(--granat);color:#fff;border-radius:8px;padding:0 9px;font-size:.95rem}
+  .q .info{font-size:.9rem;color:var(--szary);margin:0 0 6px}
+  .q .tab{overflow-x:auto}
+  .q table.dane{font-size:.82rem}
+  .q table.dane th,.q table.dane td{padding:3px 6px}
+  .q .wybor{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .q .wybor button{
+    font:inherit;font-size:.93rem;font-weight:700;cursor:pointer;border-radius:10px;padding:6px 12px;
+    border:2px solid var(--linia);background:#fff;color:var(--szary);
+  }
+  .q .wybor button:hover{border-color:var(--granat);color:var(--granat)}
+  .q .wybor button.dobrze{background:var(--zielony);border-color:var(--zielony);color:#fff}
+  .q .wybor button.zle{background:var(--czerwony);border-color:var(--czerwony);color:#fff}
+  .q .feedback{display:none;margin-top:10px;border-radius:10px;padding:8px 12px;font-size:.95rem}
+  .q .feedback.ok{display:block;background:var(--jasnyziel);color:#14532d}
+  .q .feedback.blad{display:block;background:var(--jasnyczer);color:#7f1d1d}
+  .q .feedback .nagl{display:block}
+  .q.rozwiazane{border-color:var(--zielony)}
+  .quiz-pasek{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .quiz-pasek button{font:inherit;font-weight:700;cursor:pointer;border-radius:10px;padding:8px 14px;border:2px solid var(--granat);background:#fff;color:var(--granat)}
+  .quiz-pasek .wynik-q{font-weight:700;color:var(--granat)}
+
+  .stop{margin-top:26px;text-align:center;background:#fee2e2;border:2px dashed #dc2626;border-radius:14px;padding:12px 18px;color:#991b1b;font-size:1.05rem}
+  .stop b{font-size:1.15rem}
+
+  @media print{
+    body{background:#fff;padding:0;font-size:11pt}
+    .strona{max-width:none}
+    h1{font-size:22pt}
+    h2{font-size:15pt;margin-top:18pt;page-break-after:avoid}
+    h2 .lekcja{display:none}
+    h3{page-break-after:avoid}
+    .karta,.zoom,.uwaga,.zasada,.chetni,.anomalia,.postac,.rodzaj,.q,.alg-krok,.stepper{break-inside:avoid;page-break-inside:avoid;box-shadow:none}
+    .przelam{page-break-before:always}
+    .st-nawigacja,.st-kropki,.q .wybor,.quiz-pasek{display:none}
+    .quiz{grid-template-columns:1fr 1fr}
+    details.zal .odp{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="strona">
+
+  <h1>Postaci normalne</h1>
+  <p class="podtytul">Jak sprawdzić, czy dane są dobrze podzielone na tabele — <b>1PN, 2PN, 3PN</b> po ludzku i po egzaminacyjnemu</p>
+
+  <!-- ================= 1. PO CO ================= -->
+  <h2><span class="nr">1</span> Po co? Bo powtórzenia psują dane <span class="lekcja">lekcja 1</span></h2>
+  <p class="wstep">
+    Wszystko w jednej tabeli wygląda wygodnie — jak w Excelu. Ale ta sama informacja zapisana wiele razy to
+    <b>nadmiarowość (redundancja)</b>, a z niej biorą się trzy kłopoty: <b>anomalie</b>.
+  </p>
+
+  <div class="zoom">
+    <table class="dane">
+      <thead><tr><th class="kol-pk">🔑 id_ucznia</th><th>imie</th><th>nazwisko</th><th>klasa</th><th>wychowawca</th><th>sala</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Anna</td><td>Kowalska</td><td>4TL</td><td class="zmiana">Joanna Pawlak</td><td>205</td></tr>
+        <tr><td>2</td><td>Bartosz</td><td>Nowak</td><td>4TI</td><td>Tomasz Kaczmarek</td><td>112</td></tr>
+        <tr><td>3</td><td>Celina</td><td>Wójcik</td><td>4TL</td><td class="zmiana">Joanna Pawlak</td><td>205</td></tr>
+        <tr><td>4</td><td>Damian</td><td>Zieliński</td><td>5TM</td><td>Rafał Górski</td><td>21</td></tr>
+        <tr><td>6</td><td>Filip</td><td>Szymański</td><td>4TL</td><td class="zmiana">Joanna Pawlak</td><td>205</td></tr>
+        <tr><td>8</td><td>Hubert</td><td>Kamiński</td><td>4TI</td><td>Tomasz Kaczmarek</td><td>112</td></tr>
+      </tbody>
+    </table>
+    <p class="wstep" style="margin:10px 0 0">Wychowawczyni 4TL zapisana <b>3 razy</b>, sala 205 — też 3 razy. W prawdziwej szkole klasa ma ok. 30 uczniów, czyli <b>30 kopii</b>.</p>
+  </div>
+
+  <div class="anomalie">
+    <div class="anomalia a-mod">
+      <h4>✏️ Anomalia modyfikacji</h4>
+      <p>4TL dostaje nową wychowawczynię. Trzeba poprawić <b>każdy</b> wiersz klasy. Ktoś poprawił dwa, o trzecim zapomniał:</p>
+      <div class="tab"><table class="dane">
+        <thead><tr><th>imie</th><th>klasa</th><th>wychowawca</th></tr></thead>
+        <tbody>
+          <tr><td>Anna</td><td>4TL</td><td class="zmiana">Beata Król</td></tr>
+          <tr><td>Celina</td><td>4TL</td><td class="zmiana">Beata Król</td></tr>
+          <tr><td>Filip</td><td>4TL</td><td class="zle">Joanna Pawlak</td></tr>
+        </tbody>
+      </table></div>
+      <div class="skutek">Kto w końcu jest wychowawcą 4TL? Baza mówi <b>dwie różne rzeczy</b> naraz.</div>
+    </div>
+
+    <div class="anomalia a-wst">
+      <h4>➕ Anomalia wstawiania</h4>
+      <p>Od września rusza nowa klasa 1TI z wychowawcą i salą. Uczniów jeszcze nie ma.</p>
+      <div class="tab"><table class="dane">
+        <thead><tr><th class="kol-pk">🔑 id_ucznia</th><th>imie</th><th>klasa</th><th>wychowawca</th></tr></thead>
+        <tbody>
+          <tr><td class="zle">NULL ?</td><td class="zle">?</td><td>1TI</td><td>Marek Nowicki</td></tr>
+        </tbody>
+      </table></div>
+      <div class="skutek">Nie da się zapisać klasy <b>bez ucznia</b> — klucz główny nie może być pusty.</div>
+    </div>
+
+    <div class="anomalia a-usu">
+      <h4>🗑️ Anomalia usuwania</h4>
+      <p>Damian to jedyny uczeń 5TM w tej tabeli. Odchodzi ze szkoły — usuwamy jego wiersz:</p>
+      <div class="tab"><table class="dane">
+        <thead><tr><th>imie</th><th>klasa</th><th>wychowawca</th><th>sala</th></tr></thead>
+        <tbody>
+          <tr><td class="znika">Damian</td><td class="znika">5TM</td><td class="znika">Rafał Górski</td><td class="znika">21</td></tr>
+        </tbody>
+      </table></div>
+      <div class="skutek">Razem z uczniem <b>znika cała wiedza</b> o klasie 5TM: wychowawca i sala.</div>
+    </div>
+  </div>
+
+  <div class="zasada">
+    <h3>💡 Normalizacja — definicja do zeszytu</h3>
+    <p><b>Normalizacja</b> to proces dzielenia tabel na mniejsze, powiązane kluczami, tak aby <b>usunąć nadmiarowość danych</b> i zapobiec <b>anomaliom</b> wstawiania, modyfikacji i usuwania.
+    Kolejne „stopnie porządku” to <b>postaci normalne</b>: 1PN, 2PN, 3PN.</p>
+  </div>
+
+  <!-- ================= 2. ZALEŻNOŚCI ================= -->
+  <h2 class="przelam"><span class="nr">2</span> Zależność funkcyjna — strzałka „znam A, więc znam B” <span class="lekcja">lekcja 1</span></h2>
+  <p class="wstep">Jedno narzędzie wystarczy do rozpoznania każdej postaci normalnej: strzałka.</p>
+
+  <div class="strzalka-duza">
+    <span class="pole">klasa</span><span class="grot">⟶</span><span class="pole b">wychowawca</span>
+    <span class="czyt">Czytaj: „<b>klasa wyznacza wychowawcę</b>” — jeśli znam klasę, znam <b>dokładnie jednego</b> wychowawcę. Mówimy: <i>wychowawca zależy funkcyjnie od klasy</i>.</span>
+  </div>
+
+  <h3>🤔 Jest strzałka czy nie ma? Pomyśl, potem kliknij</h3>
+  <div class="zal-lista">
+    <details class="zal"><summary>pesel → data_urodzenia</summary><div class="odp"><span class="tak">✅ Jest.</span> Z PESEL-u da się odczytać datę urodzenia — jeden PESEL = jedna data.</div></details>
+    <details class="zal"><summary>data_urodzenia → pesel</summary><div class="odp"><span class="nie">❌ Nie ma.</span> Tego samego dnia rodzi się wiele osób — jedna data, wiele PESEL-i.</div></details>
+    <details class="zal"><summary>imie → nazwisko</summary><div class="odp"><span class="nie">❌ Nie ma.</span> W bazie <code>szkola</code> są trzy Amelie — każda z innym nazwiskiem.</div></details>
+    <details class="zal"><summary>id_ucznia → klasa</summary><div class="odp"><span class="tak">✅ Jest.</span> Uczeń chodzi do jednej klasy.</div></details>
+    <details class="zal"><summary>id_gry → tytul</summary><div class="odp"><span class="tak">✅ Jest.</span> Gra o danym numerze ma jeden tytuł.</div></details>
+    <details class="zal"><summary>tytul → rok_wydania</summary><div class="odp"><span class="nie">❌ Nie ma!</span> „Resident Evil 4” wyszedł w 2005 i jako remake w 2023 — ten sam tytuł, dwa lata. Dlatego gry mają <code>id</code>.</div></details>
+    <details class="zal"><summary>id_gracza → godziny_w_grze</summary><div class="odp"><span class="nie">❌ Nie ma.</span> Gracz ma różne godziny w różnych grach.</div></details>
+    <details class="zal"><summary>(id_gracza, id_gry) → godziny_w_grze</summary><div class="odp"><span class="tak">✅ Jest.</span> Dopiero <b>para</b> gracz + gra wyznacza liczbę godzin. Lewa strona strzałki może mieć kilka kolumn.</div></details>
+  </div>
+
+  <h3>Trzy rodzaje zależności — kolory zostają do końca ściągi</h3>
+  <div class="rodzaje">
+    <div class="rodzaj r-pel">
+      <h4>🟩 pełna — tak ma być</h4>
+      <p>Kolumna zależy od <b>całego</b> klucza głównego.</p>
+      <div class="wzor">(id_ucznia, przedmiot) → ocena_koncowa</div>
+    </div>
+    <div class="rodzaj r-cze">
+      <h4>🟥 częściowa — łamie 2PN</h4>
+      <p>Kolumna zależy tylko od <b>części</b> klucza złożonego.</p>
+      <div class="wzor">(id_ucznia, przedmiot)<br>id_ucznia → nazwisko &nbsp;← wystarczy połowa klucza</div>
+    </div>
+    <div class="rodzaj r-prz">
+      <h4>🟧 przechodnia — łamie 3PN</h4>
+      <p>Kolumna zależy od klucza <b>przez inną kolumnę</b>, która kluczem nie jest.</p>
+      <div class="wzor">id_ucznia → klasa → wychowawca</div>
+    </div>
+  </div>
+
+  <!-- ================= 3. POSTACI ================= -->
+  <h2 class="przelam"><span class="nr">3</span> Trzy postaci normalne <span class="lekcja">lekcje 1–2</span></h2>
+  <p class="wstep">Każda kolejna postać = poprzednia <b>plus</b> jeden dodatkowy warunek. Tabela w 3PN jest automatycznie w 2PN i w 1PN.</p>
+
+  <div class="postaci">
+    <div class="postac ps1">
+      <div class="glowa"><b>1PN</b><span>pierwsza postać normalna</span></div>
+      <div class="tresc">
+        <div class="oficjalnie"><small>oficjalnie — egzamin</small>Każde pole zawiera <b>wartość atomową</b> (niepodzielną), nie ma powtarzających się grup kolumn, a każdy wiersz jest jednoznacznie identyfikowany <b>kluczem głównym</b>.</div>
+        <div class="ludzku"><small>po ludzku</small>W każdej komórce <b>jedna rzecz</b>. Żadnych list, żadnych kolumn <code>gra1, gra2, gra3</code>.</div>
+        <div class="tab" style="overflow-x:auto"><table class="dane">
+          <thead><tr><th>firma</th><th>adres</th></tr></thead>
+          <tbody><tr><td>Forbot</td><td class="zle">ul. Krótka 11, 22-222 Warszawa</td></tr></tbody>
+        </table></div>
+        <div class="naprawa"><b>Naprawa:</b> rozbij na osobne kolumny (<code>ulica</code>, <code>numer</code>, <code>kod</code>, <code>miasto</code>) albo listę na osobne wiersze.</div>
+      </div>
+    </div>
+
+    <div class="postac ps2">
+      <div class="glowa"><b>2PN</b><span>druga postać normalna</span></div>
+      <div class="tresc">
+        <div class="oficjalnie"><small>oficjalnie — egzamin</small>Tabela jest w 1PN i każdy atrybut niekluczowy zależy od <b>całego</b> klucza głównego, a nie od jego części (brak zależności częściowych).</div>
+        <div class="ludzku"><small>po ludzku</small>Dotyczy tylko <b>kluczy złożonych</b>. Każda kolumna potrzebuje <b>obu</b> części klucza.</div>
+        <div class="tab" style="overflow-x:auto"><table class="dane">
+          <thead><tr><th class="kol-pk">🔑 id_gracza</th><th class="kol-pk">🔑 id_gry</th><th class="kol-zle" style="background:#fee2e2;color:#b91c1c">nick</th><th>godziny</th></tr></thead>
+          <tbody><tr><td>7</td><td>3</td><td class="zle">Kotlet</td><td>120</td></tr></tbody>
+        </table></div>
+        <div class="naprawa"><b>Naprawa:</b> wydziel kolumny zależne od części klucza do nowej tabeli (<code>gracze(id_gracza, nick)</code>).</div>
+      </div>
+    </div>
+
+    <div class="postac ps3">
+      <div class="glowa"><b>3PN</b><span>trzecia postać normalna</span></div>
+      <div class="tresc">
+        <div class="oficjalnie"><small>oficjalnie — egzamin</small>Tabela jest w 2PN i żaden atrybut niekluczowy nie zależy od innego atrybutu niekluczowego (brak zależności przechodnich).</div>
+        <div class="ludzku"><small>po ludzku</small>Każda kolumna mówi coś o <b>kluczu</b>, a nie o innej kolumnie.</div>
+        <div class="tab" style="overflow-x:auto"><table class="dane">
+          <thead><tr><th class="kol-pk">🔑 id_ucznia</th><th>nazwisko</th><th>klasa</th><th style="background:#fee2e2;color:#b91c1c">wychowawca</th></tr></thead>
+          <tbody><tr><td>1</td><td>Kowalska</td><td>4TL</td><td class="zle">Joanna Pawlak</td></tr></tbody>
+        </table></div>
+        <div class="naprawa"><b>Naprawa:</b> wydziel parę <code>klasa → wychowawca</code> do nowej tabeli <code>klasy</code>, a w starej zostaw <code>klasa</code> jako klucz obcy.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mnemo">
+    Kolumna ma zależeć od <span class="m1">klucza</span><span class="m2">całego klucza</span><span class="m3">i tylko od klucza</span>
+    <small>1PN — jest klucz i jedna wartość w komórce · 2PN — od całego klucza · 3PN — od niczego poza kluczem</small>
+  </div>
+
+  <div class="chetni">
+    <h3>🔭 Zajawka: czy są wyższe postaci?</h3>
+    <ul>
+      <li>Tak: <b>BCNF</b> (postać Boyce'a-Codda — „zaostrzona 3PN”), <b>4PN</b> i <b>5PN</b>. Dotyczą rzadkich, dość wydumanych przypadków.</li>
+      <li>W praktyce i na egzaminie INF.03 wystarcza <b>3PN</b> — tabele, które projektujesz „z głową”, zwykle i tak są w 3PN.</li>
+    </ul>
+  </div>
+
+  <!-- ================= 4. ALGORYTM ================= -->
+  <h2 class="przelam"><span class="nr">4</span> Jak rozpoznać postać? Cztery pytania po kolei <span class="lekcja">lekcje 2–3</span></h2>
+  <p class="wstep">Idź od góry. Na pierwszym „<b>STOP</b>” masz odpowiedź. Odpowiedź to zawsze <b>najwyższa postać, którą tabela spełnia</b>.</p>
+
+  <div class="algorytm">
+    <div class="alg-krok"><span class="nrk">0</span><span class="pyt">Wskaż klucz główny. Prosty (1 kolumna) czy złożony?<small>Bez klucza nie ma o czym rozmawiać — taka tabela nie jest nawet w 1PN.</small></span><span class="werdykt s0">brak klucza → nieznormalizowana</span></div>
+    <div class="alg-dalej">↓ jest klucz</div>
+    <div class="alg-krok"><span class="nrk">1</span><span class="pyt">Czy jakaś komórka ma <b>listę</b> albo <b>kilka informacji</b>? Czy są kolumny <code>x1, x2, x3</code>?<small>adres w jednym polu, „CS2, Minecraft”, telefon1/telefon2</small></span><span class="werdykt s0">TAK → STOP: nieznormalizowana (0PN)</span></div>
+    <div class="alg-dalej">↓ nie — jest 1PN</div>
+    <div class="alg-krok"><span class="nrk">2</span><span class="pyt">Klucz złożony? Czy jakaś kolumna zależy tylko od <b>części</b> klucza? 🟥<small>Klucz prosty → pomiń to pytanie, 2PN jest automatycznie.</small></span><span class="werdykt s1">TAK → STOP: 1PN</span></div>
+    <div class="alg-dalej">↓ nie — jest 2PN</div>
+    <div class="alg-krok"><span class="nrk">3</span><span class="pyt">Czy jakaś kolumna niekluczowa zależy od <b>innej kolumny niekluczowej</b>? 🟧<small>szukaj par „nazwa czegoś → opis tego czegoś”: klasa → wychowawca, id_wydawcy → kraj_wydawcy</small></span><span class="werdykt s2">TAK → STOP: 2PN</span></div>
+    <div class="alg-dalej">↓ nie</div>
+    <div class="alg-krok" style="border-color:var(--p3)"><span class="nrk" style="background:var(--p3)">✓</span><span class="pyt">Wszystkie kolumny zależą od klucza, całego klucza i tylko od klucza.</span><span class="werdykt s3">3PN ✅</span></div>
+  </div>
+
+  <!-- ================= 5. STEPPER ================= -->
+  <h2 class="przelam"><span class="nr">5</span> Normalizacja klatka po klatce: od arkusza do bazy <code>szkola</code> <span class="lekcja">lekcja 2</span></h2>
+  <p class="wstep">
+    Zaczynamy od „Excelowej” tabeli ocen końcowych i krok po kroku doprowadzamy ją do 3PN.
+    Patrz na <b>strzałki nad nagłówkami</b> i na licznik, ile razy zapisano wychowawczynię 4TL.
+    Klikaj <b>Dalej →</b> albo strzałki ← → na klawiaturze.
+  </p>
+
+  <div class="stepper" id="norm" tabindex="0">
+    <div class="st-gora">
+      <div class="st-panel">
+        <div class="st-liczniki">
+          <div class="st-licznik postac-0" id="nmPostac">nieznormalizowana</div>
+          <div class="st-licznik">tabele: <span id="nmTabele">1</span></div>
+          <div class="st-licznik zolty">„Joanna Pawlak” zapisana: <span id="nmPawlak">2</span> razy</div>
+          <div class="st-licznik zielony" id="nmEtap">krok 0</div>
+        </div>
+        <div class="st-tytul" id="nmTytul"></div>
+        <p class="st-opis" id="nmOpis"></p>
+      </div>
+    </div>
+    <div class="st-nawigacja">
+      <button type="button" class="jasny" id="nmWstecz">← Wstecz</button>
+      <button type="button" id="nmDalej">Dalej →</button>
+      <button type="button" class="jasny" id="nmAuto">▶ Odtwórz</button>
+      <button type="button" class="jasny" id="nmReset">↺ Od nowa</button>
+      <div class="st-kropki" id="nmKropki"></div>
+    </div>
+    <div class="st-plansze" id="nmPlansze"></div>
+    <div class="legenda-strz">
+      <span><b style="background:#15803d"></b>zależność pełna (OK)</span>
+      <span><b style="background:#b91c1c"></b>częściowa — łamie 2PN</span>
+      <span><b style="background:#c2410c"></b>przechodnia — łamie 3PN</span>
+      <span>🔑 klucz główny · 🔗 klucz obcy</span>
+    </div>
+    <div class="st-stopka" id="nmStopka"></div>
+  </div>
+
+<script>
+(function(){
+  var KOLOR = {pelna:'#15803d', czesciowa:'#b91c1c', przechodnia:'#c2410c'};
+
+  var T0 = {
+    nazwa:'arkusz „oceny końcowe”', opis:'— tak to ktoś trzymał w Excelu',
+    kol:['uczen','klasa','wychowawca','przedmioty_i_oceny'], pk:[], fk:[],
+    w:[
+      ['Anna Kowalska','4TL','Joanna Pawlak','matematyka (4 h): 4, angielski (3 h): 5, fizyka (2 h): 5'],
+      ['Bartosz Nowak','4TI','Tomasz Kaczmarek','matematyka (4 h): 3, angielski (3 h): 4'],
+      ['Celina Wójcik','4TL','Joanna Pawlak','matematyka (4 h): 6, angielski (3 h): 5'],
+      ['Hubert Kamiński','4TI','Tomasz Kaczmarek','matematyka (4 h): 4, bazy danych (4 h): 5']
+    ]
+  };
+  var W1 = [
+    [1,'Anna','Kowalska','4TL','Joanna Pawlak','matematyka',4,4],
+    [1,'Anna','Kowalska','4TL','Joanna Pawlak','angielski',3,5],
+    [1,'Anna','Kowalska','4TL','Joanna Pawlak','fizyka',2,5],
+    [2,'Bartosz','Nowak','4TI','Tomasz Kaczmarek','matematyka',4,3],
+    [2,'Bartosz','Nowak','4TI','Tomasz Kaczmarek','angielski',3,4],
+    [3,'Celina','Wójcik','4TL','Joanna Pawlak','matematyka',4,6],
+    [3,'Celina','Wójcik','4TL','Joanna Pawlak','angielski',3,5],
+    [8,'Hubert','Kamiński','4TI','Tomasz Kaczmarek','matematyka',4,4],
+    [8,'Hubert','Kamiński','4TI','Tomasz Kaczmarek','bazy danych',4,5]
+  ];
+  var K1 = ['id_ucznia','imie','nazwisko','klasa','wychowawca','przedmiot','godziny_tyg','ocena_koncowa'];
+  function T1(extra){
+    var t = {nazwa:'oceny_koncowe', opis:'— 1 wiersz = 1 uczeń × 1 przedmiot', kol:K1, pk:['id_ucznia','przedmiot'], fk:[], w:W1};
+    for(var k in extra) t[k] = extra[k];
+    return t;
+  }
+  var UCZ2 = {nazwa:'uczniowie', kol:['id_ucznia','imie','nazwisko','klasa','wychowawca'], pk:['id_ucznia'], fk:[],
+    w:[[1,'Anna','Kowalska','4TL','Joanna Pawlak'],[2,'Bartosz','Nowak','4TI','Tomasz Kaczmarek'],
+       [3,'Celina','Wójcik','4TL','Joanna Pawlak'],[8,'Hubert','Kamiński','4TI','Tomasz Kaczmarek']]};
+  var PRZ = {nazwa:'przedmioty', kol:['przedmiot','godziny_tyg'], pk:['przedmiot'], fk:[],
+    w:[['matematyka',4],['angielski',3],['fizyka',2],['bazy danych',4]]};
+  var OC = {nazwa:'oceny_koncowe', kol:['id_ucznia','przedmiot','ocena_koncowa'], pk:['id_ucznia','przedmiot'], fk:['id_ucznia','przedmiot'],
+    w:W1.map(function(r){ return [r[0], r[5], r[7]]; })};
+  var UCZ3 = {nazwa:'uczniowie', kol:['id_ucznia','imie','nazwisko','klasa'], pk:['id_ucznia'], fk:['klasa'],
+    w:[[1,'Anna','Kowalska','4TL'],[2,'Bartosz','Nowak','4TI'],[3,'Celina','Wójcik','4TL'],[8,'Hubert','Kamiński','4TI']]};
+  var KLA = {nazwa:'klasy', kol:['klasa','wychowawca'], pk:['klasa'], fk:[], w:[['4TL','Joanna Pawlak'],['4TI','Tomasz Kaczmarek']]};
+
+  function z(o, extra){ var t = {}; for(var k in o) t[k] = o[k]; for(var k2 in extra) t[k2] = extra[k2]; return t; }
+
+  var KROKI = [
+    {
+      postac:0, pawlak:2, tabele:[T0],
+      tytul:'Start: jedna tabela, wszystko w środku',
+      opis:'Tak wygląda typowy arkusz. Czy to w ogóle tabela relacyjna? Zanim klikniesz dalej — znajdź <b>co najmniej dwa</b> problemy.',
+      stopka:'Pytanie 0 z algorytmu: gdzie jest klucz główny? Imię i nazwisko się powtarzają w szkołach — nie nadają się.'
+    },
+    {
+      postac:0, pawlak:2, tabele:[z(T0,{zleKol:['przedmioty_i_oceny','uczen']})],
+      tytul:'❌ Nie 1PN: listy w komórkach',
+      opis:'W kolumnie <b>przedmioty_i_oceny</b> jest cała lista — nie da się policzyć średniej z matematyki ani posortować po ocenie. Kolumna <b>uczen</b> skleja imię i nazwisko. Nie ma klucza głównego. To tabela <b>nieznormalizowana</b>.',
+      stopka:'Naprawa 1PN: każdy przedmiot w osobnym wierszu, każda informacja w osobnej kolumnie, dodajemy klucz.'
+    },
+    {
+      postac:1, pawlak:5, tabele:[T1({nowy:true})],
+      tytul:'✅ 1PN: jedna wartość w komórce',
+      opis:'Każdy przedmiot ucznia to osobny wiersz. Imię i nazwisko osobno, godziny osobno. Klucz główny jest <b>złożony</b>: <code>(id_ucznia, przedmiot)</code> — dopiero para jest unikalna. Ale zobacz licznik: wychowawczyni 4TL zapisana już <b>5 razy</b>.',
+      stopka:'1PN usuwa listy, ale potrafi <b>zwiększyć</b> liczbę powtórzeń. Dlatego są kolejne postaci.'
+    },
+    {
+      postac:1, pawlak:5, tabele:[T1({zmiana:[[0,'wychowawca'],[1,'wychowawca'],[2,'wychowawca'],[5,'wychowawca'],[6,'wychowawca']]})],
+      tytul:'✏️ Anomalia: 4TL zmienia wychowawcę',
+      opis:'Żeby zmienić wychowawczynię 4TL, trzeba poprawić <b>5 komórek</b> (żółte). Wystarczy pominąć jedną i baza sama sobie przeczy. To właśnie <b>anomalia modyfikacji</b>.',
+      stopka:'Skąd tyle kopii? Bo kolumna <code>wychowawca</code> wcale nie opisuje pary „uczeń + przedmiot”. Sprawdźmy strzałki.'
+    },
+    {
+      postac:1, pawlak:5, tabele:[T1({
+        zleKol:['imie','nazwisko','klasa','wychowawca','godziny_tyg'],
+        strz:[{z:['id_ucznia','przedmiot'], d:['ocena_koncowa'], typ:'pelna'},
+              {z:['id_ucznia'], d:['imie','nazwisko','klasa','wychowawca'], typ:'czesciowa'},
+              {z:['przedmiot'], d:['godziny_tyg'], typ:'czesciowa'}]})],
+      tytul:'❌ Nie 2PN: zależności częściowe 🟥',
+      opis:'Tylko <b>ocena_koncowa</b> potrzebuje całego klucza (zielona strzałka). Imię, nazwisko, klasa i wychowawca zależą od samego <b>id_ucznia</b>, a godziny — od samego <b>przedmiotu</b>. To połówki klucza → czerwone strzałki → tabela jest tylko w <b>1PN</b>.',
+      stopka:'Naprawa 2PN: każda czerwona strzałka wyjeżdża do osobnej tabeli razem ze swoją częścią klucza.'
+    },
+    {
+      postac:2, pawlak:2, tabele:[z(UCZ2,{nowy:true}), z(PRZ,{nowy:true}), z(OC,{nowy:true})],
+      tytul:'✅ 2PN: trzy tabele',
+      opis:'Dane ucznia trafiły do <b>uczniowie</b> (klucz <code>id_ucznia</code>), godziny do <b>przedmioty</b> (klucz <code>przedmiot</code>). W <b>oceny_koncowe</b> zostało to, co naprawdę zależy od pary — sama ocena. Kolumny klucza stały się <b>kluczami obcymi</b>. Licznik spadł z 5 do 2.',
+      stopka:'Dwie nowe tabele mają klucze <b>proste</b> — więc są w 2PN automatycznie. Zostaje pytanie 3: zależności przechodnie.'
+    },
+    {
+      postac:2, pawlak:2, tabele:[
+        z(UCZ2,{zleKol:['wychowawca'], strz:[{z:['id_ucznia'], d:['imie','nazwisko','klasa'], typ:'pelna'},{z:['klasa'], d:['wychowawca'], typ:'przechodnia'}]}),
+        z(PRZ,{strz:[{z:['przedmiot'], d:['godziny_tyg'], typ:'pelna'}]}),
+        z(OC,{strz:[{z:['id_ucznia','przedmiot'], d:['ocena_koncowa'], typ:'pelna'}]})],
+      tytul:'❌ Nie 3PN: zależność przechodnia 🟧',
+      opis:'W tabeli <b>uczniowie</b> wychowawca nie opisuje ucznia, tylko jego <b>klasę</b>: <code>id_ucznia → klasa → wychowawca</code>. Dwóch uczniów 4TL = dwie kopie wychowawczyni. Pozostałe dwie tabele mają same zielone strzałki — są w porządku.',
+      stopka:'Naprawa 3PN: para <code>klasa → wychowawca</code> wyjeżdża do nowej tabeli <b>klasy</b>, a w uczniach zostaje <code>klasa</code> jako klucz obcy.'
+    },
+    {
+      postac:3, pawlak:1, tabele:[
+        z(UCZ3,{strz:[{z:['id_ucznia'], d:['imie','nazwisko','klasa'], typ:'pelna'}]}),
+        z(KLA,{nowy:true, strz:[{z:['klasa'], d:['wychowawca'], typ:'pelna'}]}),
+        z(PRZ,{strz:[{z:['przedmiot'], d:['godziny_tyg'], typ:'pelna'}]}),
+        z(OC,{strz:[{z:['id_ucznia','przedmiot'], d:['ocena_koncowa'], typ:'pelna'}]})],
+      tytul:'✅ 3PN: same zielone strzałki',
+      opis:'Każda kolumna zależy od <b>klucza, całego klucza i tylko od klucza</b>. Wychowawczyni 4TL jest zapisana <b>raz</b>. Zmiana wychowawcy = 1 komórka. Nowa klasa bez uczniów? Jeden wiersz w <b>klasy</b>. Odchodzi Bartosz? 4TI i jej wychowawca zostają.',
+      stopka:'Wszystkie trzy anomalie z części 1 zniknęły.'
+    },
+    {
+      postac:3, pawlak:1, koniec:true, tabele:[z(UCZ3,{}), z(KLA,{}), z(PRZ,{}), z(OC,{})],
+      tytul:'🎯 To jest baza <code>szkola</code>!',
+      opis:'Porównaj z mapą bazy <code>szkola</code> z pierwszej ściągi: <b>uczniowie</b>, <b>klasy</b>, <b>przedmioty</b>, <b>oceny</b>. Baza, na której pracujecie, to <b>wynik normalizacji</b>. Jedyna różnica: tam klasy i przedmioty mają jeszcze sztuczny klucz <code>id</code> (a uczeń wskazuje klasę przez <code>id_klasy</code>) — zasada jest dokładnie ta sama.',
+      stopka:'Projektując „z głową”, robisz normalizację w pamięci: <b>jedna tabela = jedna rzecz</b>, każda informacja w <b>jednym</b> miejscu.'
+    }
+  ];
+
+  var root = document.getElementById('norm');
+  if(!root) return;
+  var plansze = document.getElementById('nmPlansze');
+  var kropki = document.getElementById('nmKropki');
+  var btnD = document.getElementById('nmDalej');
+  var btnW = document.getElementById('nmWstecz');
+  var btnAuto = document.getElementById('nmAuto');
+  var krok = 0, timer = null;
+  var NAZWY = ['nieznormalizowana','1PN','2PN','3PN'];
+
+  KROKI.forEach(function(k, i){
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = i; b.title = 'Krok ' + i;
+    b.setAttribute('aria-label', 'Krok ' + i);
+    b.addEventListener('click', function(){ stop(); idz(i); });
+    kropki.appendChild(b);
+  });
+
+  function ma(l, x){ return !!l && l.indexOf(x) > -1; }
+  function maKom(l, r, kol){ return !!l && l.some(function(p){ return p[0] === r && p[1] === kol; }); }
+
+  function tabelaHTML(t, koniec){
+    var poziomy = (t.strz || []).length;
+    var h = '<div class="st-blok' + (t.nowy ? ' nowy' : '') + '">' +
+      '<div class="tytul">📋 ' + t.nazwa + (t.opis ? ' <small>' + t.opis + '</small>' : '') + '</div>' +
+      '<div class="st-tabela' + (koniec ? ' gotowe' : '') + '"><div class="rys" data-poziomy="' + poziomy + '">' +
+      '<svg></svg><table class="st-dane"><thead><tr>';
+    t.kol.forEach(function(k){
+      var kl = ma(t.zleKol, k) ? 'kol-zle' : (ma(t.pk, k) ? 'kol-pk' : (ma(t.fk, k) ? 'kol-fk' : ''));
+      var ik = (ma(t.pk, k) ? '🔑' : '') + (ma(t.fk, k) ? '🔗' : '');
+      h += '<th data-kol="' + k + '" class="' + kl + '">' + (ik ? ik + ' ' : '') + k + '</th>';
+    });
+    h += '</tr></thead><tbody>';
+    t.w.forEach(function(w, r){
+      h += '<tr>';
+      w.forEach(function(v, c){
+        var k = t.kol[c];
+        var kl = maKom(t.zmiana, r, k) ? 'zmiana' : (ma(t.zleKol, k) ? (t.pk.length ? 'kol-zle' : 'zle') : '');
+        h += '<td class="' + kl + '">' + v + '</td>';
+      });
+      h += '</tr>';
+    });
+    return h + '</tbody></table></div></div></div>';
+  }
+
+  // strzałki zależności nad nagłówkami
+  function rysuj(blok, t){
+    var rys = blok.querySelector('.rys');
+    var svg = rys.querySelector('svg');
+    var tab = rys.querySelector('table');
+    var strz = t.strz || [];
+    var KROK_P = 15, DOL = 10;
+    var H = strz.length ? DOL + strz.length * KROK_P + 6 : 0;
+    tab.style.marginTop = H + 'px';
+    svg.setAttribute('width', tab.offsetWidth);
+    svg.setAttribute('height', H);
+    if(!strz.length){ svg.innerHTML = ''; return; }
+    var srodki = {};
+    Array.prototype.forEach.call(tab.tHead.rows[0].cells, function(th){
+      srodki[th.dataset.kol] = th.offsetLeft + th.offsetWidth / 2;
+    });
+    var baza = H;
+    var html = '<defs>';
+    Object.keys(KOLOR).forEach(function(typ){
+      html += '<marker id="grot-' + typ + '-' + blok.dataset.i + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">' +
+              '<path d="M0,0 L10,5 L0,10 z" fill="' + KOLOR[typ] + '"/></marker>';
+    });
+    html += '</defs>';
+    strz.forEach(function(s, i){
+      var kol = KOLOR[s.typ];
+      var y = baza - DOL - (strz.length - 1 - i) * KROK_P - 4;
+      var zx = s.z.map(function(k){ return srodki[k]; });
+      var dx = s.d.map(function(k){ return srodki[k]; });
+      var g = '<g stroke="' + kol + '" stroke-width="2.6" fill="none" stroke-linecap="round">';
+      // każda kolumna klucza ma własny „pień” do poziomu strzałki
+      zx.forEach(function(x){ g += '<line x1="' + x + '" y1="' + baza + '" x2="' + x + '" y2="' + y + '"/>'; });
+      var wszystkie = dx.concat(zx);
+      g += '<line x1="' + Math.min.apply(null, wszystkie) + '" y1="' + y + '" x2="' + Math.max.apply(null, wszystkie) + '" y2="' + y + '"/>';
+      dx.forEach(function(x){
+        g += '<line x1="' + x + '" y1="' + y + '" x2="' + x + '" y2="' + (baza - 1) + '" marker-end="url(#grot-' + s.typ + '-' + blok.dataset.i + ')"/>';
+      });
+      html += g + '</g>';
+    });
+    svg.innerHTML = html;
+  }
+
+  function rysujWszystko(){
+    var k = KROKI[krok];
+    Array.prototype.forEach.call(plansze.children, function(blok, i){ rysuj(blok, k.tabele[i]); });
+  }
+
+  function idz(i){
+    krok = Math.max(0, Math.min(KROKI.length - 1, i));
+    var k = KROKI[krok];
+    plansze.innerHTML = k.tabele.map(function(t){ return tabelaHTML(t, k.koniec); }).join('');
+    Array.prototype.forEach.call(plansze.children, function(b, i2){ b.dataset.i = krok + '-' + i2; });
+    rysujWszystko();
+
+    var p = document.getElementById('nmPostac');
+    p.className = 'st-licznik postac-' + k.postac;
+    p.textContent = 'postać: ' + NAZWY[k.postac];
+    document.getElementById('nmTabele').textContent = k.tabele.length;
+    document.getElementById('nmPawlak').textContent = k.pawlak;
+    document.getElementById('nmEtap').textContent = 'krok ' + krok + ' / ' + (KROKI.length - 1);
+    document.getElementById('nmTytul').innerHTML = k.tytul;
+    document.getElementById('nmOpis').innerHTML = k.opis;
+    document.getElementById('nmStopka').innerHTML = k.stopka;
+    Array.prototype.forEach.call(kropki.children, function(b, i2){
+      b.classList.toggle('akt', i2 === krok);
+      b.classList.toggle('przed', i2 < krok);
+    });
+    btnW.disabled = krok === 0;
+    btnD.disabled = krok === KROKI.length - 1;
+    if(btnD.disabled) stop();
+  }
+
+  function stop(){ if(timer){ clearInterval(timer); timer = null; btnAuto.textContent = '▶ Odtwórz'; } }
+  btnD.addEventListener('click', function(){ stop(); idz(krok + 1); });
+  btnW.addEventListener('click', function(){ stop(); idz(krok - 1); });
+  document.getElementById('nmReset').addEventListener('click', function(){ stop(); idz(0); });
+  btnAuto.addEventListener('click', function(){
+    if(timer){ stop(); return; }
+    if(krok === KROKI.length - 1) idz(0);
+    btnAuto.textContent = '⏸ Pauza';
+    timer = setInterval(function(){ if(krok >= KROKI.length - 1){ stop(); return; } idz(krok + 1); }, 4200);
+  });
+  root.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight'){ e.preventDefault(); stop(); idz(krok + 1); }
+    if(e.key === 'ArrowLeft'){  e.preventDefault(); stop(); idz(krok - 1); }
+  });
+  window.addEventListener('resize', rysujWszystko);
+  window.addEventListener('beforeprint', rysujWszystko);
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(rysujWszystko);
+
+  idz(0);
+})();
+</script>
+
+  <!-- ================= 6. QUIZ ================= -->
+  <h2 class="przelam"><span class="nr">6</span> Rozpoznaj postać — trening <span class="lekcja">lekcje 3–4</span></h2>
+  <p class="wstep">
+    Dla każdej tabeli: znajdź klucz, narysuj w głowie strzałki, przejdź algorytm z części 4 — <b>dopiero potem</b> kliknij.
+    Na wydruku przyciski znikają — kartka nadaje się na ćwiczenie.
+  </p>
+  <div class="quiz" id="quiz"></div>
+  <div class="quiz-pasek">
+    <span class="wynik-q" id="quizWynik">Rozwiązane: 0 / 0</span>
+    <button type="button" id="quizReset">↺ Wyczyść odpowiedzi</button>
+  </div>
+
+<script>
+(function(){
+  var ODP = ['nieznormalizowana','1PN','2PN','3PN'];
+  var Q = [
+    { t:'firmy', info:'Pytanie prosto z egzaminu INF.03.',
+      kol:['id','firma','adres'], pk:['id'],
+      w:[[1,'Forbot','ul. Krótka 11, 22-222 Warszawa'],[2,'Marbot','ul. Długa 5, 33-333 Warszawa']],
+      odp:0, dlaczego:'W polu <code>adres</code> są cztery informacje naraz: ulica, numer, kod i miasto. Wartość nie jest atomowa.',
+      naprawa:'Kolumny <code>ulica</code>, <code>numer</code>, <code>kod_pocztowy</code>, <code>miasto</code>.' },
+    { t:'gracze', info:'',
+      kol:['id_gracza','nick','gry'], pk:['id_gracza'],
+      w:[[1,'Kotlet','CS2, Minecraft'],[2,'Zuza_99','Fortnite, Minecraft, Valorant']],
+      odp:0, dlaczego:'W kolumnie <code>gry</code> jest <b>lista</b>. Nie da się sprawdzić „kto gra w Minecrafta” zwykłym <code>WHERE</code>.',
+      naprawa:'Osobna tabela <code>biblioteka(id_gracza, id_gry)</code> — jeden wiersz = jedna gra gracza (związek N:M).' },
+    { t:'biblioteka', info:'Klucz złożony.',
+      kol:['id_gracza','id_gry','nick','tytul','godziny'], pk:['id_gracza','id_gry'],
+      w:[[1,3,'Kotlet','Minecraft',340],[1,5,'Kotlet','CS2',87],[2,3,'Zuza_99','Minecraft',12]],
+      odp:1, dlaczego:'1PN jest (komórki atomowe, jest klucz). Ale <code>nick</code> zależy tylko od <code>id_gracza</code>, a <code>tytul</code> tylko od <code>id_gry</code> — <b>zależności częściowe</b> 🟥. Tylko <code>godziny</code> potrzebują całego klucza.',
+      naprawa:'<code>gracze(id_gracza, nick)</code>, <code>gry(id_gry, tytul)</code>, <code>biblioteka(id_gracza, id_gry, godziny)</code>.' },
+    { t:'gry', info:'Klucz prosty.',
+      kol:['id_gry','tytul','id_wydawcy','nazwa_wydawcy','kraj_wydawcy'], pk:['id_gry'],
+      w:[[1,'Wiedźmin 3','4','CD PROJEKT RED','Polska'],[2,'Cyberpunk 2077','4','CD PROJEKT RED','Polska'],[3,'Assassin\'s Creed','7','Ubisoft','Francja']],
+      odp:2, dlaczego:'Klucz prosty → 2PN automatycznie. Ale <code>nazwa_wydawcy</code> i <code>kraj_wydawcy</code> zależą od <code>id_wydawcy</code>, a nie od gry: <code>id_gry → id_wydawcy → kraj_wydawcy</code> — <b>zależność przechodnia</b> 🟧.',
+      naprawa:'<code>wydawcy(id_wydawcy, nazwa, kraj)</code>; w <code>gry</code> zostaje <code>id_wydawcy</code> jako klucz obcy.' },
+    { t:'uczniowie', info:'Tabela z bazy <code>szkola</code>.',
+      kol:['id','imie','nazwisko','id_klasy','data_urodzenia'], pk:['id'],
+      w:[[1,'Anna','Kowalska',3,'2008-04-12'],[2,'Bartosz','Nowak',1,'2008-11-30']],
+      odp:3, dlaczego:'Komórki atomowe, klucz prosty, a każda kolumna opisuje <b>ucznia</b>. <code>id_klasy</code> to klucz obcy — ma się powtarzać i niczego nie „ciągnie” za sobą (wychowawca jest w tabeli <code>klasy</code>).',
+      naprawa:'Nic — tak ma być.' },
+    { t:'uczniowie_kola', info:'Tabela łącząca z bazy <code>szkola</code>.',
+      kol:['id_ucznia','id_kola','data_zapisu'], pk:['id_ucznia','id_kola'],
+      w:[[3,2,'2026-09-09'],[3,3,'2026-09-22'],[5,3,'2026-09-15']],
+      odp:3, dlaczego:'Jedyna kolumna niekluczowa, <code>data_zapisu</code>, opisuje <b>parę</b> uczeń + koło (kiedy <i>ten</i> uczeń zapisał się na <i>to</i> koło). Zależy od całego klucza.',
+      naprawa:'Nic — typowa, poprawna tabela łącząca.' },
+    { t:'oceny', info:'Klucz prosty.',
+      kol:['id','id_ucznia','nazwisko_ucznia','przedmiot','ocena'], pk:['id'],
+      w:[[101,1,'Kowalska','matematyka',5],[102,1,'Kowalska','fizyka',4],[103,2,'Nowak','matematyka',3]],
+      odp:2, dlaczego:'Klucz prosty → 2PN. Ale <code>nazwisko_ucznia</code> opisuje ucznia, nie ocenę: <code>id → id_ucznia → nazwisko_ucznia</code> — <b>przechodnia</b> 🟧. Kowalska zapisana dwa razy.',
+      naprawa:'Usuń <code>nazwisko_ucznia</code> — nazwisko jest już w tabeli <code>uczniowie</code>.' },
+    { t:'udzial_w_turniejach', info:'Klucz złożony.',
+      kol:['id_turnieju','id_druzyny','nazwa_turnieju','data_turnieju','miejsce'], pk:['id_turnieju','id_druzyny'],
+      w:[[1,10,'Szkolna Liga CS2','2026-11-14',1],[1,11,'Szkolna Liga CS2','2026-11-14',2],[2,10,'Puchar Rocket League','2026-12-05',3]],
+      odp:1, dlaczego:'<code>nazwa_turnieju</code> i <code>data_turnieju</code> zależą tylko od <code>id_turnieju</code> — od połowy klucza 🟥. Tylko <code>miejsce</code> zależy od pary.',
+      naprawa:'<code>turnieje(id_turnieju, nazwa, data)</code> + <code>udzial(id_turnieju, id_druzyny, miejsce)</code>.' },
+    { t:'zawodnicy', info:'',
+      kol:['nick','telefon1','telefon2','telefon3','druzyna'], pk:['nick'],
+      w:[['Kotlet','600100200','601222333','','Szkolne Orły'],['Zuza_99','602444555','','','Cyber Sowy']],
+      odp:0, dlaczego:'<code>telefon1, telefon2, telefon3</code> to <b>powtarzająca się grupa kolumn</b> — ta sama informacja rozłożona na kilka kolumn. Czwarty telefon? Trzeba zmieniać tabelę.',
+      naprawa:'Tabela <code>telefony(nick, telefon)</code> — jeden numer = jeden wiersz.' },
+    { t:'przedmioty', info:'Klucz prosty.',
+      kol:['id','nazwa','godziny_tyg','nauczyciel','telefon_nauczyciela'], pk:['id'],
+      w:[[1,'Matematyka',4,'Tomasz Kaczmarek','601 111 222'],[7,'Bazy danych',4,'Marek Nowicki','602 333 444'],[8,'Programowanie',4,'Marek Nowicki','602 333 444']],
+      odp:2, dlaczego:'Klucz prosty → 2PN. <code>telefon_nauczyciela</code> zależy od <code>nauczyciel</code>, nie od przedmiotu — <b>przechodnia</b> 🟧. Telefon Nowickiego zapisany dwa razy.',
+      naprawa:'<code>nauczyciele(id, imie_nazwisko, telefon)</code>; w <code>przedmioty</code> klucz obcy <code>id_nauczyciela</code>.' }
+  ];
+
+  var quiz = document.getElementById('quiz');
+  if(!quiz) return;
+  var wynik = document.getElementById('quizWynik');
+
+  Q.forEach(function(q, i){
+    var h = '<div class="q" data-i="' + i + '"><h4><span class="qnr">' + (i + 1) + '</span>' + q.t + '</h4>' +
+      (q.info ? '<p class="info">' + q.info + '</p>' : '') +
+      '<div class="tab"><table class="dane"><thead><tr>';
+    q.kol.forEach(function(k){
+      var pk = q.pk.indexOf(k) > -1;
+      h += '<th class="' + (pk ? 'kol-pk' : '') + '">' + (pk ? '🔑 ' : '') + k + '</th>';
+    });
+    h += '</tr></thead><tbody>';
+    q.w.forEach(function(w){ h += '<tr>' + w.map(function(v){ return '<td>' + v + '</td>'; }).join('') + '</tr>'; });
+    h += '</tbody></table></div><div class="wybor">';
+    ODP.forEach(function(o, j){ h += '<button type="button" data-j="' + j + '">' + o + '</button>'; });
+    h += '</div><div class="feedback"></div></div>';
+    quiz.insertAdjacentHTML('beforeend', h);
+  });
+
+  function licz(){
+    var n = quiz.querySelectorAll('.q.rozwiazane').length;
+    wynik.textContent = 'Rozwiązane: ' + n + ' / ' + Q.length;
+  }
+
+  quiz.addEventListener('click', function(e){
+    var b = e.target.closest('button[data-j]');
+    if(!b) return;
+    var karta = b.closest('.q');
+    var q = Q[+karta.dataset.i];
+    var j = +b.dataset.j;
+    var fb = karta.querySelector('.feedback');
+    karta.querySelectorAll('.wybor button').forEach(function(x){ x.classList.remove('dobrze','zle'); });
+    if(j === q.odp){
+      b.classList.add('dobrze');
+      karta.classList.add('rozwiazane');
+      fb.className = 'feedback ok';
+      fb.innerHTML = '<b class="nagl">✅ Tak — ' + ODP[q.odp] + '.</b>' + q.dlaczego + '<br><b>Naprawa:</b> ' + q.naprawa;
+    } else {
+      b.classList.add('zle');
+      fb.className = 'feedback blad';
+      fb.innerHTML = '<b class="nagl">❌ Jeszcze nie.</b>Przejdź algorytm od pytania 0: gdzie klucz? listy w komórkach? klucz złożony i zależność od połowy? kolumna zależna od innej kolumny?';
+    }
+    licz();
+  });
+  document.getElementById('quizReset').addEventListener('click', function(){
+    quiz.querySelectorAll('.q').forEach(function(k){
+      k.classList.remove('rozwiazane');
+      k.querySelector('.feedback').className = 'feedback';
+      k.querySelectorAll('.wybor button').forEach(function(x){ x.classList.remove('dobrze','zle'); });
+    });
+    licz();
+  });
+  licz();
+})();
+</script>
+
+  <!-- ================= 7. PUŁAPKI ================= -->
+  <div class="uwaga">
+    <h3>⚠️ Pułapki przy rozpoznawaniu</h3>
+    <ul>
+      <li><b>Klucz prosty + 1PN = od razu 2PN.</b> Zależność częściowa wymaga klucza złożonego — od „połowy” jednej kolumny nic nie zależy.</li>
+      <li><b>Powtarzający się klucz obcy to nie błąd.</b> <code>id_klasy = 3</code> u ośmiu uczniów jest w porządku. Błąd to powtarzający się <b>opis</b> (nazwisko wychowawcy, kraj wydawcy).</li>
+      <li><b>Pytanie „w której postaci jest tabela?”</b> = <b>najwyższa</b> spełniona. Tabela w 3PN jest też w 2PN i 1PN — zaznacz 3PN.</li>
+      <li><b>Tabela łącząca z samymi kluczami</b> (np. <code>uczniowie_kola</code>) jest w 3PN.</li>
+      <li><b>Adres w jednym polu</b> — na egzaminie to zawsze brak 1PN. Imię i nazwisko też bezpieczniej trzymać osobno.</li>
+      <li><b>Najpierw klucz, potem reszta.</b> Bez wskazania klucza głównego nie da się mówić o 2PN ani 3PN.</li>
+    </ul>
+  </div>
+
+  <div class="chetni">
+    <h3>🧪 Dla chętnych: denormalizacja — kiedy celowo łamiemy zasady</h3>
+    <ul>
+      <li>Czasem projektant <b>świadomie</b> trzyma kopię danych, żeby nie liczyć jej za każdym razem — np. kolumna <code>liczba_uczniow</code> w tabeli <code>klasy</code> zamiast <code>COUNT(*)</code> przy każdym wyświetleniu strony. To jest <b>denormalizacja</b>.</li>
+      <li>Cena: trzeba samemu pilnować, żeby kopia się nie rozjechała (to dokładnie anomalia modyfikacji — tylko kontrolowana).</li>
+      <li>W bazie <code>szkola</code>: <code>data_urodzenia</code> da się wyliczyć z <code>pesel</code>. Trzymamy ją osobno dla wygody i czytelności zapytań.</li>
+      <li>Uwaga na „fałszywe duplikaty”: <code>cena</code> w zamówieniu to <b>cena z dnia zakupu</b>, a nie kopia aktualnej ceny produktu — to inna informacja, więc jej miejsce jest w zamówieniu.</li>
+    </ul>
+  </div>
+
+  <div class="stop">
+    <b>Co dalej?</b><br>
+    Znormalizowane dane leżą w kilku tabelach — następny krok to składanie ich z powrotem w jednym zapytaniu.
+  </div>
+
+</div>
+</body>
+</html>
